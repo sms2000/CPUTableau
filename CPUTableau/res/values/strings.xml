@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">CPUTableau</string>
+    <string name="options">Options</string>
+    <string name="dialog.headline">CPU temperature overlay preferences</string> 
+    <string name="dialog.enableoverlay">Enable overlay</string> 
+    <string name="dialog.enablenotify">Enable the label in the Notification panel</string> 
+    <string name="dialog.enabledebug">Extensive debug</string> 
+    <string name="dialog.accelValue">Acceleration to wake up</string> 
+    <string name="dialog.OK">"      OK      "</string>
+    <string name="notify">CPUTableau active...</string> 
+    <string name="notify.active">Active...</string> 
+</resources>

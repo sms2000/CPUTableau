@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+      package="com.ogp.cputableau"
+      android:versionCode="1"
+      android:versionName="1.0">
+    <application android:label="@string/app_name" android:debuggable="true" android:icon="@drawable/icon">
+        <activity android:name=".CPUTableauActivity"
+                  android:label="@string/app_name"
+                  android:theme="@android:style/Theme.Dialog" >
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+        <service android:enabled="true" android:name="com.ogp.cputableau.CPUTableauService" android:exported="true" />
+        <receiver android:name="BootLoader" android:process="com.ogp.cputableau.CPUTableauService">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </receiver>
+  </application>
+    <uses-sdk android:minSdkVersion="10"/>
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+</manifest> 
