@@ -150,12 +150,24 @@ public class WatchdogThread extends Thread
 			{
 				if (-1 == freqIndex)
 				{
-	 				for (freqIndex = 0; freqIndex < freqFiles.length; freqIndex++)
-	 				{
+ 					if (0 > readFileData (freqFiles[0]))
+ 					{
 	 					new ShellInterface();
 	 					ShellInterface.isSuAvailable();			
-	 					ShellInterface.runCommand ("chmod 404 " + freqFiles[freqIndex]);
 	 					
+	 					for (freqIndex = 0; 
+	 						 freqIndex < freqFiles.length; 
+	 						 freqIndex++)
+	 					{
+	 						ShellInterface.runCommand ("chmod 404 " + freqFiles[freqIndex]);
+	 					}
+ 					}
+ 					
+
+ 					for (freqIndex = 0; 
+ 						 freqIndex < freqFiles.length; 
+ 						 freqIndex++)
+	 				{
 	 					if (0 < readFileData (freqFiles[freqIndex]))
 	 					{
 	 						break;
