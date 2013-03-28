@@ -9,7 +9,6 @@ import android.view.View;
 class TableauView extends View 
 {
     private Bitmap mBitmap;
-    private long mStartTime;
 
     
     public TableauView(Context context) 
@@ -20,7 +19,6 @@ class TableauView extends View
         final int H = 200; 
 
         mBitmap = Bitmap.createBitmap(W, H, Bitmap.Config.RGB_565);
-        mStartTime = System.currentTimeMillis();
     }
 
     

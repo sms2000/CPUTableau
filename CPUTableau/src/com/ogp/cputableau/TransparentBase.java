@@ -6,6 +6,7 @@ import android.widget.RelativeLayout;
 
 public class TransparentBase extends RelativeLayout
 {
+	@SuppressWarnings("unused")
 	private static final String TAG					= "TransparentBase";
 
 	

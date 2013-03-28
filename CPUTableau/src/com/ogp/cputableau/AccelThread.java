@@ -2,12 +2,9 @@ package com.ogp.cputableau;
 
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 
-import android.os.Handler;
 import android.util.Log;
-import android.widget.Toast;
 
 
 public class AccelThread extends Thread
@@ -18,7 +15,6 @@ public class AccelThread extends Thread
 	
 	
 	private boolean				threadRun 		= true;
-	private Handler				mainHandler;				
 	private long				pollingTime		= 250;
 	
 
@@ -42,10 +38,8 @@ public class AccelThread extends Thread
 	}
 	
 	
-	private void initAccelThread ()
+	private void initAccelThread()
 	{
-		this.mainHandler	  = new Handler();
-		
 		start();
 	}
 	

@@ -11,6 +11,7 @@ public class StateMachine
 	private static final String 			ACCEL_LIMIT			 	= "AccelLimit";
 	private static final String 			EXTENSIVE_DEBUG			= "ExtensiveDebug";
 	private static final String 			USE_NOTIFY				= "UseNotify";
+	private static final String 			USE_PWL					= "UsePWL";
 	
 	private static Context					appContext;
 	
@@ -18,6 +19,7 @@ public class StateMachine
 	private static boolean 					extensiveDebug;
 	private static boolean 					useNotify;
 	private static boolean 					useOverlay;
+	private static boolean 					usePWL;
 	
 	
 	private StateMachine()
@@ -35,6 +37,7 @@ public class StateMachine
 		useOverlay					= true;
 		extensiveDebug				= false;
 		useNotify					= false;
+		usePWL						= false;
 		
 		readFromPersistantStorage();
 	}
@@ -49,6 +52,7 @@ public class StateMachine
 		accelLimit 		= pref.getFloat 	(ACCEL_LIMIT, 		accelLimit);
 		extensiveDebug 	= pref.getBoolean 	(EXTENSIVE_DEBUG, 	extensiveDebug);
 		useNotify	 	= pref.getBoolean 	(USE_NOTIFY, 		useNotify);
+		usePWL			= pref.getBoolean 	(USE_PWL, 			usePWL);
 	}
 
 	
@@ -63,6 +67,7 @@ public class StateMachine
 		editor.putFloat		(ACCEL_LIMIT, 			accelLimit);
 		editor.putBoolean	(EXTENSIVE_DEBUG, 		extensiveDebug);
 		editor.putBoolean	(USE_NOTIFY, 			useNotify);
+		editor.putBoolean	(USE_PWL, 				usePWL);
 		
 		editor.commit();
 	}
@@ -80,4 +85,7 @@ public class StateMachine
 
 	public static boolean 	getOverlay				() 				{return useOverlay;}
 	public static void		setOverlay				(boolean value)	{useOverlay = value;}
+
+	public static boolean 	getPWL					() 				{return usePWL;}
+	public static void		setPWL					(boolean value)	{usePWL = value;}
 }

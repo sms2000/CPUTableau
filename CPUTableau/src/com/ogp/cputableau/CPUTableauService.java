@@ -28,7 +28,6 @@ public class CPUTableauService extends Service implements WatchdogCallback,
 	private static final String 	TAG 					= "CPUTableauService";
 
 	private static final int 		EVENT_DELTA 			= 500000;
-	private static final int 		MEMORY_SECONDS 			= 3;
 	private static final int 		WAKELOCK_RELEASE		= 5000;				// 5 seconds
 	
 	private static CPUTableauService	thisService			= null; 
@@ -45,7 +44,9 @@ public class CPUTableauService extends Service implements WatchdogCallback,
 	private Sensor 					hardwareSensor;
 	private boolean 				registeredSensor		= false;
 	private	boolean					phoneWaking				= false;
-	private WakeLock 				wakeLock;
+	private WakeLock 				wakeLock				= null;
+	private WakeLock 				partialWakelock			= null;
+	
 	
 	private static final String[]	tempFiles				= new String[]{
 																			"/sys/devices/system/cpu/cpu0/cpufreq/cpu_temp",
@@ -226,9 +227,46 @@ public class CPUTableauService extends Service implements WatchdogCallback,
 
 // MMMMMMMMMMMMMMM	    	registerShakeDetector (false);
 		}
+    	
+    	
+    	pwlProcessing (wakeUp);
 	}
 
 	
+	private void pwlProcessing (boolean wakeUp) 
+	{
+		if (wakeUp)
+		{
+			try
+			{
+				partialWakelock.release();
+
+				Log.w(TAG, "Permanent PWL is dropped successfully.");
+			}
+			catch(Exception e)
+			{
+				Log.w(TAG, "Permanent PWL is not dropped.");
+			}
+
+			partialWakelock = null;
+		}
+		else if (StateMachine.getPWL())
+		{
+			PowerManager pm = (PowerManager)getSystemService (Context.POWER_SERVICE);
+
+			partialWakelock = pm.newWakeLock (PowerManager.PARTIAL_WAKE_LOCK, 
+											  "Permanent PWL");
+			
+			if (null != partialWakelock)
+			{
+				partialWakelock.acquire();
+				
+				Log.w(TAG, "Permanent PWL is acquired successfully.");
+			}
+		}
+	}
+
+
 	private void setItForeground()
 	{
 		if (!isForeground

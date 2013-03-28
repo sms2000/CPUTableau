@@ -2,12 +2,10 @@ package com.ogp.cputableau;
 
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 
 import android.os.Handler;
 import android.util.Log;
-import android.widget.Toast;
 
 
 public class WatchdogThread extends Thread
@@ -21,7 +19,6 @@ public class WatchdogThread extends Thread
 	private WatchdogCallback 	watchdogCallback;
 	private Handler				mainHandler;				
 	private long				pollingTime	= 500;
-	private boolean 			suRecall  = false;
 	private int					tempIndex	= -1;
 	private int					freqIndex	= -1;
 	private int					onlineCPUs	= -1;

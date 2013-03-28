@@ -7,6 +7,7 @@ import android.widget.RelativeLayout;
 
 public class TransparentContainer extends RelativeLayout
 {
+	@SuppressWarnings("unused")
 	private static final 	String 	TAG					= "TransparentContainer";
 
 	private static final 	int 	TOP_BASE			= 1;
