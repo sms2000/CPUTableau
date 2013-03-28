@@ -8,6 +8,7 @@
     <string name="dialog.enabledebug">Extensive debug</string> 
     <string name="dialog.accelValue">Acceleration to wake up</string> 
     <string name="dialog.OK">"      OK      "</string>
+    <string name="dialog.wakelock">"Permanent PWL"</string>
     <string name="notify">CPUTableau active...</string> 
     <string name="notify.active">Active...</string> 
 </resources>
