@@ -8,14 +8,12 @@ public class StateMachine
 {
 	private static final String 			PERSISTANT_STORAGE 		= "T2TB";
 	private static final String 			USE_OVERLAY 			= "UseOverlay";
-	private static final String 			ACCEL_LIMIT			 	= "AccelLimit";
 	private static final String 			EXTENSIVE_DEBUG			= "ExtensiveDebug";
 	private static final String 			USE_NOTIFY				= "UseNotify";
 	private static final String 			USE_PWL					= "UsePWL";
 	
 	private static Context					appContext;
 	
-	private static float					accelLimit;
 	private static boolean 					extensiveDebug;
 	private static boolean 					useNotify;
 	private static boolean 					useOverlay;
@@ -33,7 +31,6 @@ public class StateMachine
 		
 		
 // Defaults
-		accelLimit 					= 9.8f;				// ~1g
 		useOverlay					= true;
 		extensiveDebug				= false;
 		useNotify					= false;
@@ -49,7 +46,6 @@ public class StateMachine
 				  												  Context.MODE_PRIVATE);
 		
 		useOverlay		= pref.getBoolean 	(USE_OVERLAY, 		useOverlay);
-		accelLimit 		= pref.getFloat 	(ACCEL_LIMIT, 		accelLimit);
 		extensiveDebug 	= pref.getBoolean 	(EXTENSIVE_DEBUG, 	extensiveDebug);
 		useNotify	 	= pref.getBoolean 	(USE_NOTIFY, 		useNotify);
 		usePWL			= pref.getBoolean 	(USE_PWL, 			usePWL);
@@ -64,7 +60,6 @@ public class StateMachine
 		Editor editor = pref.edit();
 		
 		editor.putBoolean	(USE_OVERLAY, 			useOverlay);
-		editor.putFloat		(ACCEL_LIMIT, 			accelLimit);
 		editor.putBoolean	(EXTENSIVE_DEBUG, 		extensiveDebug);
 		editor.putBoolean	(USE_NOTIFY, 			useNotify);
 		editor.putBoolean	(USE_PWL, 				usePWL);
@@ -73,10 +68,6 @@ public class StateMachine
 	}
 
 	
-	public static float 	getAccelLimit			()				{return accelLimit;}
-	public static void  	setAccelLimit 			(float value)	{accelLimit = value;}
-
-
 	public static boolean 	getExtensiveDebug		()				{return extensiveDebug;}
 	public static void 		setExtensiveDebug		(boolean value)	{extensiveDebug = value;}
 

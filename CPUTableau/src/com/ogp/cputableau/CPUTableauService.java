@@ -1,5 +1,6 @@
 package com.ogp.cputableau;
 
+import android.annotation.SuppressLint;
 import android.app.Notification;
 import android.app.PendingIntent;
 import android.app.Service;
@@ -9,12 +10,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
-import android.hardware.Sensor;
-import android.hardware.SensorEvent;
-import android.hardware.SensorEventListener;
-import android.hardware.SensorManager;
 import android.os.BatteryManager;
-import android.os.Handler;
 import android.os.IBinder;
 import android.os.PowerManager;
 import android.os.PowerManager.WakeLock;
@@ -22,31 +18,20 @@ import android.util.Log;
 import android.view.WindowManager;
 
 
-public class CPUTableauService extends Service implements WatchdogCallback, 
-															 SensorEventListener
+public class CPUTableauService extends Service implements WatchdogCallback
 {
 	private static final String 	TAG 					= "CPUTableauService";
 
-	private static final int 		EVENT_DELTA 			= 500000;
-	private static final int 		WAKELOCK_RELEASE		= 5000;				// 5 seconds
-	
 	private static CPUTableauService	thisService			= null; 
 
 	private WatchdogThread			watchdogThread 			= null;
-    private AccelThread				accelThread 			= null;
 	private TransparentContent	 	transparentContent;
 
 	private BroadcastReceiver 		batteryInfoReceiver;
 	private BroadcastReceiver 		screenInfoReceiverOn;
 	private BroadcastReceiver 		screenInfoReceiverOff;
 	private boolean 				isForeground			= false;
-	private SensorManager 			sensorManager;
-	private Sensor 					hardwareSensor;
-	private boolean 				registeredSensor		= false;
-	private	boolean					phoneWaking				= false;
-	private WakeLock 				wakeLock				= null;
 	private WakeLock 				partialWakelock			= null;
-	
 	
 	private static final String[]	tempFiles				= new String[]{
 																			"/sys/devices/system/cpu/cpu0/cpufreq/cpu_temp",
@@ -65,15 +50,6 @@ public class CPUTableauService extends Service implements WatchdogCallback,
 
 	private static final String		onlineFiles				= "/sys/devices/system/cpu/cpu%d/online";
 
-	
-	private class ReleaseWakeLock implements Runnable
-	{
-		public void run() 
-		{
-			releaseWakeLock();
-		}
-	}
-	
 
 	@Override
 	public IBinder onBind (Intent intent)
@@ -94,9 +70,11 @@ public class CPUTableauService extends Service implements WatchdogCallback,
 		StateMachine.init (this);
 		
 		transparentContent 	= new TransparentContent(this);
-		sensorManager		= (SensorManager)getSystemService (SENSOR_SERVICE);
-		
-		hardwareSensor = sensorManager.getDefaultSensor (Sensor.TYPE_ACCELEROMETER);
+
+		PowerManager pm = (PowerManager)getSystemService (Context.POWER_SERVICE);
+
+		partialWakelock = pm.newWakeLock (PowerManager.PARTIAL_WAKE_LOCK, 
+										  "Permanent PWL");
  
 		batteryInfoReceiver = new BroadcastReceiver()
 		{
@@ -147,8 +125,6 @@ public class CPUTableauService extends Service implements WatchdogCallback,
 				  		  new IntentFilter (Intent.ACTION_SCREEN_OFF));
 
 		wakeUp (true);
-		
-// MMMMMMMMMMM		accelThread = new AccelThread();
 	}
 
 
@@ -159,14 +135,7 @@ public class CPUTableauService extends Service implements WatchdogCallback,
 
 		thisService = null;
 
-		if (null != accelThread)
-		{
-			accelThread.finalize();
-			accelThread = null;
-		}
-
 		wakeUp (false);
-    	registerShakeDetector (false);
 
     	unregisterReceiver (batteryInfoReceiver);
     	unregisterReceiver (screenInfoReceiverOn);
@@ -201,8 +170,6 @@ public class CPUTableauService extends Service implements WatchdogCallback,
 		if (!wakeUp)
 		{
 	    	stopItForeground();
-	    	
-// MMMMMMMMMMMMMMM	    	registerShakeDetector (true);
 		}
 		
 		if (null != watchdogThread)
@@ -224,8 +191,6 @@ public class CPUTableauService extends Service implements WatchdogCallback,
 												 this);
 			
 	    	setItForeground();
-
-// MMMMMMMMMMMMMMM	    	registerShakeDetector (false);
 		}
     	
     	
@@ -233,34 +198,24 @@ public class CPUTableauService extends Service implements WatchdogCallback,
 	}
 
 	
+	@SuppressLint("Wakelock")
 	private void pwlProcessing (boolean wakeUp) 
 	{
-		if (wakeUp)
+		if (null != partialWakelock)
 		{
-			try
+			if (wakeUp)
 			{
-				partialWakelock.release();
-
-				Log.w(TAG, "Permanent PWL is dropped successfully.");
+				if (partialWakelock.isHeld())
+				{
+					partialWakelock.release();
+	
+					Log.w(TAG, "Permanent PWL is dropped successfully.");
+				}
 			}
-			catch(Exception e)
-			{
-				Log.w(TAG, "Permanent PWL is not dropped.");
-			}
-
-			partialWakelock = null;
-		}
-		else if (StateMachine.getPWL())
-		{
-			PowerManager pm = (PowerManager)getSystemService (Context.POWER_SERVICE);
-
-			partialWakelock = pm.newWakeLock (PowerManager.PARTIAL_WAKE_LOCK, 
-											  "Permanent PWL");
-			
-			if (null != partialWakelock)
+			else if (StateMachine.getPWL())
 			{
 				partialWakelock.acquire();
-				
+					
 				Log.w(TAG, "Permanent PWL is acquired successfully.");
 			}
 		}
@@ -433,123 +388,5 @@ public class CPUTableauService extends Service implements WatchdogCallback,
 				 		 y);
 		
 		editor.apply();
-	}
-
-	
-	private void registerShakeDetector (boolean register) 
-	{
-		if (registeredSensor)
-		{
-			sensorManager.unregisterListener (this);
-			
-			registeredSensor = false;
-		}
-			
-		
-		if (register)
-		{
-			sensorManager.registerListener (this, 
-											hardwareSensor, 
-											EVENT_DELTA);			// 2 events per second
-			
-			registeredSensor = true;
-		}
-	}
-
-
-	public void onAccuracyChanged (Sensor 	sensor, 
-								   int 		accuracy) 
-	{
-	}
-
-
-	public void onSensorChanged (SensorEvent event) 
-	{
-		Log.v(TAG, String.format ("onSensorChanged. Values: %.2f  %.2f  %.2f",
-							      event.values[0],
-							      event.values[1],
-							      event.values[2]));
-
-		
-		
-/*		if (!useLinear)
-		{
-// Manual linear accelerometer
-			final float alpha = 0.8f;
-
-			gravity[0] = alpha * gravity[0] + (1 - alpha) * event.values[0];
-			gravity[1] = alpha * gravity[1] + (1 - alpha) * event.values[1];
-			gravity[2] = alpha * gravity[2] + (1 - alpha) * event.values[2];
-
-			event.values[0] -= gravity[0];
-			event.values[1] -= gravity[1];
-			event.values[2] -= gravity[2];		
-		}
-		
-		float value = Math.abs (event.values[1]);
-		
-		memory[memoryCounter++] = value;
-		memoryCounter %= memoryLimit;
-
-		float aver = 0;
-		for (int i = 0; i < memoryLimit; i++)
-		{
-			aver += memory[i]; 
-		}
-		
-		
-		aver /= memoryLimit;
-		
-		Log.v(TAG, String.format ("onSensorChanged. Value (aver) Y: %.1f",
-				  					aver));
-
-		if (aver > StateMachine.getAccelLimit()
-			&&
-			StateMachine.getAccelLimit() > 0)
-		{
-			wakeThePhone();
-		}  */
-	}
-
-
-	@SuppressWarnings("unused")
-	private void wakeThePhone() 
-	{
-		if (phoneWaking)
-		{
-			return;
-		}
-		
-		
-		phoneWaking = true;
-		
-		PowerManager pm = (PowerManager) getSystemService (Context.POWER_SERVICE);
-		wakeLock = pm.newWakeLock (PowerManager.SCREEN_BRIGHT_WAKE_LOCK | PowerManager.ACQUIRE_CAUSES_WAKEUP, 
-								   TAG);
-		wakeLock.acquire();
-		Log.d(TAG, "WakeLock acquired.");
-		
-		new Handler().postDelayed (new ReleaseWakeLock(),
-								   WAKELOCK_RELEASE);	
-	}
-	
-	
-	private void releaseWakeLock()
-	{
-		if (phoneWaking)
-		{
-			try
-			{
-				wakeLock.release();
-				Log.d(TAG, "WakeLock released.");
-			}
-			catch(Exception e)
-			{
-				
-			}
-			
-			wakeLock 	= null;		
-			phoneWaking = false;
-		}
 	}
 }

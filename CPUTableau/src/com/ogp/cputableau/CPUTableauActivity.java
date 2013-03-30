@@ -8,7 +8,6 @@ import android.view.ViewGroup;
 import android.view.Window;
 import android.widget.Button;
 import android.widget.CheckBox;
-import android.widget.SeekBar;
 
 
 public class CPUTableauActivity extends Activity
@@ -16,14 +15,10 @@ public class CPUTableauActivity extends Activity
     @SuppressWarnings("unused")
 	private static final String 	TAG 						= "CPUTableauActivity";
 	
-	private static final int 		MULTIPLY_ACCEL 				= 10;
-	private static final int 		MAX_ACCEL 					= 20 * MULTIPLY_ACCEL;		// ~2g
-    
     private CheckBox 				cbEnableOverlay		= null;
     private CheckBox 				cbEnableDebug		= null;
     private CheckBox 				cbEnableNotify 		= null;
     private CheckBox 				cbEnablePWL 		= null;
-    private SeekBar 				sbAccelValue		= null;
     
     
     @Override
@@ -52,7 +47,6 @@ public class CPUTableauActivity extends Activity
         
         cbEnableOverlay = (CheckBox)viewGroup.findViewById (R.id.cbEnable);
         cbEnableDebug   = (CheckBox)viewGroup.findViewById (R.id.cbDebug);
-        sbAccelValue	= (SeekBar) viewGroup.findViewById (R.id.sbAccel);
         cbEnableNotify  = (CheckBox)viewGroup.findViewById (R.id.cbNotify);
         cbEnablePWL		= (CheckBox)viewGroup.findViewById (R.id.cbWakelock);
         
@@ -65,10 +59,6 @@ public class CPUTableauActivity extends Activity
         {
         	CPUTableauService.loadService (this);
         }
-        
-        
-        sbAccelValue.setMax (MAX_ACCEL);
-        sbAccelValue.setProgress ((int)(StateMachine.getAccelLimit() * MULTIPLY_ACCEL));
     }
 
     
@@ -88,7 +78,6 @@ public class CPUTableauActivity extends Activity
     	
 
     	StateMachine.setOverlay 		(cbEnableOverlay.isChecked());
-		StateMachine.setAccelLimit 		((float)sbAccelValue.getProgress() / MULTIPLY_ACCEL);
 		StateMachine.setExtensiveDebug 	(cbEnableDebug.isChecked());
 		StateMachine.setUseNotify	   	(cbEnableNotify.isChecked());
 		StateMachine.setPWL	 		  	(cbEnablePWL.isChecked());
