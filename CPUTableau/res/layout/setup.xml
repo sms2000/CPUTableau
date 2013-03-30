@@ -50,23 +50,6 @@
 		    android:layout_height="wrap_content"
 		    android:text="@string/dialog.enabledebug" />
 		
-		<TextView
-		    android:layout_marginTop="20dp"
-		    android:layout_marginLeft="10dp"
-		    android:layout_marginRight="10dp"
-		    android:layout_width="wrap_content"
-		    android:layout_height="wrap_content"
-		    android:text="@string/dialog.accelValue" />
-		
-		<SeekBar
-		    android:id="@+id/sbAccel"
-		    android:layout_marginTop="5dp"
-		    android:layout_marginLeft="5dp"
-		    android:layout_marginRight="5dp"
-		    android:layout_width="fill_parent"
-		    android:layout_height="wrap_content" />
-		
-		
 		<CheckBox
 		    android:id="@+id/cbWakelock"
 		    android:layout_marginLeft="30dp"
