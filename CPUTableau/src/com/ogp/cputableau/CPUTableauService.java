@@ -11,11 +11,11 @@ import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 import android.os.BatteryManager;
+import android.os.Handler;
 import android.os.IBinder;
 import android.os.PowerManager;
 import android.os.PowerManager.WakeLock;
 import android.util.Log;
-import android.view.WindowManager;
 
 
 public class CPUTableauService extends Service implements WatchdogCallback
@@ -25,13 +25,14 @@ public class CPUTableauService extends Service implements WatchdogCallback
 	private static CPUTableauService	thisService			= null; 
 
 	private WatchdogThread			watchdogThread 			= null;
-	private TransparentContent	 	transparentContent;
+	private TransparentFrame	 	transparentFrame;
 
 	private BroadcastReceiver 		batteryInfoReceiver;
 	private BroadcastReceiver 		screenInfoReceiverOn;
 	private BroadcastReceiver 		screenInfoReceiverOff;
 	private boolean 				isForeground			= false;
 	private WakeLock 				partialWakelock			= null;
+	private Handler					handler					= new Handler();
 	
 	private static final String[]	tempFiles				= new String[]{
 																			"/sys/devices/system/cpu/cpu0/cpufreq/cpu_temp",
@@ -50,6 +51,16 @@ public class CPUTableauService extends Service implements WatchdogCallback
 
 	private static final String		onlineFiles				= "/sys/devices/system/cpu/cpu%d/online";
 
+	
+	private class ActivatePane implements Runnable
+	{
+		public void run() 
+		{
+			transparentFrame = new TransparentFrame(CPUTableauService.this, 
+													new TransparentContent(CPUTableauService.this)); 
+		}
+	}
+	
 
 	@Override
 	public IBinder onBind (Intent intent)
@@ -69,8 +80,8 @@ public class CPUTableauService extends Service implements WatchdogCallback
 		
 		StateMachine.init (this);
 		
-		transparentContent 	= new TransparentContent(this);
-
+		setOverlayPaneInternal();
+		
 		PowerManager pm = (PowerManager)getSystemService (Context.POWER_SERVICE);
 
 		partialWakelock = pm.newWakeLock (PowerManager.PARTIAL_WAKE_LOCK, 
@@ -141,16 +152,11 @@ public class CPUTableauService extends Service implements WatchdogCallback
     	unregisterReceiver (screenInfoReceiverOn);
     	unregisterReceiver (screenInfoReceiverOff);
     	
-		WindowManager windowManager = (WindowManager)getSystemService (Context.WINDOW_SERVICE);
-
-		try
-		{
-			windowManager.removeView (transparentContent);
-			transparentContent = null;
-		}
-		catch(Exception e)
-		{
-		}
+    	if (null != transparentFrame)
+    	{
+    		transparentFrame.dismiss();
+    		transparentFrame = null;
+    	}
     	
 		super.onDestroy();
 	}
@@ -172,28 +178,6 @@ public class CPUTableauService extends Service implements WatchdogCallback
 	    	stopItForeground();
 		}
 		
-		if (null != watchdogThread)
-		{
-			watchdogThread.finalize();
-			watchdogThread = null;
-		}
-    	
-    	if (wakeUp)
-		{
-			if (null != watchdogThread)
-			{
-				return;
-			}
-			
-			watchdogThread = new WatchdogThread (tempFiles, 
-												 freqFiles,
-												 onlineFiles,
-												 this);
-			
-	    	setItForeground();
-		}
-    	
-    	
     	pwlProcessing (wakeUp);
 	}
 
@@ -279,7 +263,6 @@ public class CPUTableauService extends Service implements WatchdogCallback
 	private void reloadForegroundInternal()
 	{
 		stopItForeground();
-		
 		setItForeground();
 	}
 	
@@ -295,7 +278,7 @@ public class CPUTableauService extends Service implements WatchdogCallback
 
 			context.startService (intent);
 
-			Log.w(TAG, "Loader finised loading the Service.");
+			Log.w(TAG, "Loader finished loading the Service.");
 		}
 		catch(Exception e)
 		{
@@ -316,7 +299,7 @@ public class CPUTableauService extends Service implements WatchdogCallback
 
 			context.stopService (intent);
 
-			Log.w(TAG, "Loader finised stopping the Service.");
+			Log.w(TAG, "Loader finished stopping the Service.");
 		}
 		catch(Exception e)
 		{
@@ -326,12 +309,55 @@ public class CPUTableauService extends Service implements WatchdogCallback
 	}
 	
 	
+	public static void setOverlayPane()
+	{
+		if (null != thisService)
+		{
+			thisService.setOverlayPaneInternal();
+		}
+	}
+	
+	
+	private void setOverlayPaneInternal()
+	{
+		boolean now = StateMachine.getOverlay();
+		
+		if (now)
+		{
+			if (null == transparentFrame)
+			{
+				handler.post (new ActivatePane());
+			}
+			
+			watchdogThread = new WatchdogThread (tempFiles, 
+												 freqFiles,
+												 onlineFiles,
+												 this);
+
+			setItForeground();
+		}
+		else
+		{
+			if (null != transparentFrame)
+			{
+				transparentFrame.dismiss();
+				transparentFrame = null;
+			}
+			
+    		if (null != watchdogThread)
+    		{
+    			watchdogThread.finalize();
+    			watchdogThread = null;
+    		}
+		}
+	}
+		
 	
 	public void errorTemp() 
 	{
 		try
 		{
-			transparentContent.errorTemp();
+			transparentFrame.errorTemp();
 		}
 		catch(Exception e)
 		{
@@ -344,8 +370,8 @@ public class CPUTableauService extends Service implements WatchdogCallback
 	{
 		try
 		{
-			transparentContent.setTemp (temp, 	
-										online);
+			transparentFrame.setTemp (temp, 	
+							      	  online);
 		}
 		catch(Exception e)
 		{
@@ -358,8 +384,19 @@ public class CPUTableauService extends Service implements WatchdogCallback
 		SharedPreferences	sharedPrefs = getSharedPreferences ("Defaults", 
 																0);
 		
-		return sharedPrefs.getFloat ("X", 
-									 0f);
+		float X = sharedPrefs.getFloat ("X", 
+									 	0f);
+		
+		if (X <= -0.45f)
+		{
+			X = -0.45f;
+		}
+		else if (X > 0.45f)
+		{
+			X = 0.45f;
+		}
+		
+		return X;
 	}
 
 	
@@ -368,8 +405,19 @@ public class CPUTableauService extends Service implements WatchdogCallback
 		SharedPreferences	sharedPrefs = getSharedPreferences ("Defaults", 
 																0);
 
-		return sharedPrefs.getFloat ("Y", 
-									 0f);
+		float Y = sharedPrefs.getFloat ("Y", 
+			 							0f);
+
+		if (Y <= -0.45f)
+		{
+			Y = -0.45f;
+		}
+		else if (Y > 0.45f)
+		{
+			Y = 0.45f;
+		}
+
+		return Y;
 	}
 	
 	

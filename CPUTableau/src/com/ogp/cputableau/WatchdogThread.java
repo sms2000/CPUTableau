@@ -296,7 +296,10 @@ public class WatchdogThread extends Thread
 		} 
 		catch (Exception e) 
 		{
-			e.printStackTrace();
+			if (StateMachine.getExtensiveDebug())
+			{
+				e.printStackTrace();
+			}
 		}
 	    
 		return -1;

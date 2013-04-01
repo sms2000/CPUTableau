@@ -27,6 +27,7 @@ public class CPUTableauActivity extends Activity
         super.onCreate (savedInstanceState);
         
         StateMachine.init (this);
+        StateMachine.setActivityRun (true);
         
         requestWindowFeature (Window.FEATURE_NO_TITLE); 
 
@@ -64,19 +65,6 @@ public class CPUTableauActivity extends Activity
     
     protected void saveAndFinish()
     {
-    	if (StateMachine.getOverlay() != cbEnableOverlay.isChecked())
-        {
-        	if (StateMachine.getOverlay())
-        	{
-        		CPUTableauService.stopService (this);
-        	}
-        	else
-        	{
-        		CPUTableauService.loadService (this);
-        	}
-        }
-    	
-
     	StateMachine.setOverlay 		(cbEnableOverlay.isChecked());
 		StateMachine.setExtensiveDebug 	(cbEnableDebug.isChecked());
 		StateMachine.setUseNotify	   	(cbEnableNotify.isChecked());
@@ -84,8 +72,12 @@ public class CPUTableauActivity extends Activity
 
         StateMachine.writeToPersistantStorage();
 
+        CPUTableauService.setOverlayPane();			// Order of calls is critical!
         CPUTableauService.reloadForeground();
         
+        
     	finish();
+
+    	StateMachine.setActivityRun (false);
     }
 }

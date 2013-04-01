@@ -24,10 +24,7 @@ public class BootLoader extends BroadcastReceiver
 			{
 				StateMachine.init (context);
 				
-				if (StateMachine.getOverlay())
-				{
-					CPUTableauService.loadService (context);
-				}
+				CPUTableauService.loadService (context);
 			}
 
 		}

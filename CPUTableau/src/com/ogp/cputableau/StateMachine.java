@@ -18,6 +18,8 @@ public class StateMachine
 	private static boolean 					useNotify;
 	private static boolean 					useOverlay;
 	private static boolean 					usePWL;
+
+	private static boolean 					activityRun;
 	
 	
 	private StateMachine()
@@ -29,6 +31,8 @@ public class StateMachine
 	{
 		appContext = context.getApplicationContext();
 		
+		
+		activityRun					= false;
 		
 // Defaults
 		useOverlay					= true;
@@ -68,6 +72,7 @@ public class StateMachine
 	}
 
 	
+// Preserved (global state)	
 	public static boolean 	getExtensiveDebug		()				{return extensiveDebug;}
 	public static void 		setExtensiveDebug		(boolean value)	{extensiveDebug = value;}
 
@@ -79,4 +84,9 @@ public class StateMachine
 
 	public static boolean 	getPWL					() 				{return usePWL;}
 	public static void		setPWL					(boolean value)	{usePWL = value;}
+
+
+// Not preserved (local state)	
+	public static void 		setActivityRun			(boolean value) {activityRun = value;}
+	public static boolean	isActivityRun			() 				{return activityRun;}
 }
