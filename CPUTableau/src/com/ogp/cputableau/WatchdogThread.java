@@ -18,7 +18,7 @@ public class WatchdogThread extends Thread
 	private String				onlineFiles;			
 	private WatchdogCallback 	watchdogCallback;
 	private Handler				mainHandler;				
-	private long				pollingTime	= 500;
+	private long				pollingTime	= 1000;
 	private int					tempIndex	= -1;
 	private int					freqIndex	= -1;
 	private int					onlineCPUs	= -1;

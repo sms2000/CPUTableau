@@ -22,6 +22,8 @@ public class CPUTableauService extends Service implements WatchdogCallback
 {
 	private static final String 	TAG 					= "CPUTableauService";
 
+	private static final float 		PERCENT_LIMIT 			= 0.49f;
+
 	private static CPUTableauService	thisService			= null; 
 
 	private WatchdogThread			watchdogThread 			= null;
@@ -387,13 +389,13 @@ public class CPUTableauService extends Service implements WatchdogCallback
 		float X = sharedPrefs.getFloat ("X", 
 									 	0f);
 		
-		if (X <= -0.45f)
+		if (X <= -PERCENT_LIMIT)
 		{
-			X = -0.45f;
+			X = -PERCENT_LIMIT;
 		}
-		else if (X > 0.45f)
+		else if (X > PERCENT_LIMIT)
 		{
-			X = 0.45f;
+			X = PERCENT_LIMIT;
 		}
 		
 		return X;
@@ -408,13 +410,13 @@ public class CPUTableauService extends Service implements WatchdogCallback
 		float Y = sharedPrefs.getFloat ("Y", 
 			 							0f);
 
-		if (Y <= -0.45f)
+		if (Y <= -PERCENT_LIMIT)
 		{
-			Y = -0.45f;
+			Y = -PERCENT_LIMIT;
 		}
-		else if (Y > 0.45f)
+		else if (Y > PERCENT_LIMIT)
 		{
-			Y = 0.45f;
+			Y = PERCENT_LIMIT;
 		}
 
 		return Y;
@@ -435,6 +437,6 @@ public class CPUTableauService extends Service implements WatchdogCallback
 		editor.putFloat ("Y", 
 				 		 y);
 		
-		editor.apply();
+		editor.commit();
 	}
 }
