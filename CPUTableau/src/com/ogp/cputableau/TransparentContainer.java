@@ -45,13 +45,13 @@ public class TransparentContainer extends RelativeLayout
 	public void setTemp (int 	temp[], 
 						 String online) 
 	{
-		clientView.setTemp (temp, 
+		clientView.updateParameters (temp, 
 							online);
 	}
 
 
 	public void errorTemp() 
 	{
-		clientView.errorTemp();
+		clientView.setErrorParameters();
 	}
 }

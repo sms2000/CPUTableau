@@ -26,18 +26,19 @@ public class TransparentContent extends TransparentBase
 	private static final int 		PAINT_2				= 0xD0F0F020;
 
 
-	private Paint 					overlayPaint[]		= new Paint[3];
-	private Paint 					dashPaint 			= new Paint();
-	private Paint 					backgroundPaint		= new Paint();	
-	private String 					strTemperature 		= "no temp";
-	private String 					strClock	 		= "no clock";
-	private String 					strOnline	 		= "no cores";
-	private int						tempStored[]		= new int[2];
-	private Rect 					bounds 				= new Rect();
+	private Paint 					overlayPaint[]			= new Paint[3];
+	private Paint 					dashPaint 				= new Paint();
+	private Paint 					backgroundPaint			= new Paint();	
+	private String 					strTemperature 			= "no temp";
+	private String 					strClock	 			= "no clock";
+	private String 					strOnline	 			= "no cores";
+	private int						storedIntParameter[]	= new int[2];
+	private String					staredStrParameter[]	= new String[1];
+	private Rect 					bounds 					= new Rect();
 
-	private Point					contentSize			= new Point(160, 
-																	55);
-	private int 					tempDivider			= 0;
+	private Point					contentSize				= new Point(160, 
+																		55);
+	private int 					tempDivider				= 0;
 	
 	
 	public TransparentContent(Context context)
@@ -59,8 +60,9 @@ public class TransparentContent extends TransparentBase
 		
 		getContentSize (contentSize);
 		
+		setErrorParameters();
 		setEnabled (true);
-		
+				
 		start();		
 	}
 
@@ -85,11 +87,11 @@ public class TransparentContent extends TransparentBase
 
 		int paint = 0;
 		    
-		if (-1 == tempStored[0])
+		if (-1 == storedIntParameter[0])
 		{
 			paint = 1;
 		}
-		else if (-2 == tempStored[0])
+		else if (-2 == storedIntParameter[0])
 		{
 			paint = 2;
 		}
@@ -118,18 +120,18 @@ public class TransparentContent extends TransparentBase
 	}
 
 
-	public void errorTemp() 
+	public void setErrorParameters() 
 	{
-		if (-1 != tempStored[0])
+		if (-1 != storedIntParameter[0])
 		{
 			strTemperature = "  ???  ";
-			tempStored[0] = -1;
+			storedIntParameter[0] = -1;
 		}
 		
-		if (-1 != tempStored[1])
+		if (-1 != storedIntParameter[1])
 		{
 			strClock = "  ???  ";
-			tempStored[1] = -1;
+			storedIntParameter[1] = -1;
 		}
 
 		strOnline = "???";
@@ -138,39 +140,39 @@ public class TransparentContent extends TransparentBase
 	}
 
 
-	public void setTemp (int 	temp[], 
-						 String online) 
+	public void updateParameters (int 		parameter[], 
+						 		  String 	online) 
 	{
 		if (0 == tempDivider
 			||
-			temp[0] / tempDivider < 10
+			parameter[0] / tempDivider < 10
 			||
-			temp[0] / tempDivider >= 100)
+			parameter[0] / tempDivider >= 100)
 		{
 			for (tempDivider = 1; tempDivider < 100000; tempDivider *= 10)
 			{
-				if (temp[0] / tempDivider < 100)
+				if (parameter[0] / tempDivider < 100)
 				{
 					break;
 				}
 			}
 		}
 		
-		tempStored[0] = temp[0] / tempDivider;
-		tempStored[1] = temp[1] / 1000;
+		storedIntParameter[0] = parameter[0] / tempDivider;
+		storedIntParameter[1] = parameter[1] / 1000;
 		
 
-		if (0 == tempStored[0])
+		if (0 == storedIntParameter[0])
 		{
 			strTemperature = "???";
 		}
 		else
 		{
 			strTemperature = String.format ("%d°C", 
-											tempStored[0]);
+											storedIntParameter[0]);
 		}
 		strClock = String.format ("%d MHz", 
-								  tempStored[1]);
+								  storedIntParameter[1]);
 		
 		strOnline = online;
 

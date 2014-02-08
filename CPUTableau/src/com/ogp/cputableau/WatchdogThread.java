@@ -11,6 +11,9 @@ import android.util.Log;
 public class WatchdogThread extends Thread
 {
 	private static final String TAG 		= "WatchdogThread";
+
+	private static final int 	MAX_STRINGS = 3;
+	
 	
 	private boolean				threadRun 	= true;
 	private String[]			tempFiles;
@@ -22,6 +25,13 @@ public class WatchdogThread extends Thread
 	private int					tempIndex	= -1;
 	private int					freqIndex	= -1;
 	private int					onlineCPUs	= -1;
+	
+	enum DataStatus {None, OK, Error};
+	
+	private DataStatus dataStatus = DataStatus.None;
+
+	private String 				oldStrOnline	= "";
+	private int					oldRes[]		= new int[MAX_STRINGS];
 	
 	
     private class ErrorTempTask implements Runnable
@@ -101,7 +111,7 @@ public class WatchdogThread extends Thread
 	
 	protected void loop()
 	{
-		int res[] = new int[3];
+		int res[] = new int[MAX_STRINGS];
 		
 		while (threadRun)
 		{
@@ -194,7 +204,8 @@ public class WatchdogThread extends Thread
  				else
  				{
  					if (StateMachine.getExtensiveDebug())
- 					Log.d(TAG, "Result: " + res);
+ 						Log.d(TAG, "Result: " + res);
+ 					
  					resOK = true;
  				}
 			}
@@ -220,12 +231,27 @@ public class WatchdogThread extends Thread
 			
 			if (resOK)
 			{
-				mainHandler.post (new NewTempTask (res, 
-												   strOnline));
+				boolean updated = updateOldData  (res, 
+												  strOnline);
+
+				
+				if (DataStatus.OK != dataStatus 
+					|| 
+					updated)
+				{
+					dataStatus = DataStatus.OK; 
+					
+					mainHandler.post (new NewTempTask (res, 
+														strOnline));
+				}
 			}
 			else
 			{
-				mainHandler.post (new ErrorTempTask());
+				if (DataStatus.Error != dataStatus)
+				{
+					dataStatus = DataStatus.Error; 
+					mainHandler.post (new ErrorTempTask());
+				}
 			}
 
 			try 
@@ -241,6 +267,30 @@ public class WatchdogThread extends Thread
 	}
 	
 	
+	private boolean updateOldData (int[] 		res, 
+								  String 		strOnline) 
+	{
+		boolean updated = false;
+		
+		if (!oldStrOnline.equals (strOnline))
+		{
+			oldStrOnline = strOnline;
+			updated = true;
+		}
+
+		for (int i = 0; i < MAX_STRINGS; i++)
+		{
+			if (oldRes[i] != res[i])
+			{
+				oldRes[i] = res[i];
+				updated = true;
+			}
+		}
+		
+		return updated;
+	}
+
+
 	private String readOnlineFilesData (String onlineFiles) 
 	{
 		String output = null;

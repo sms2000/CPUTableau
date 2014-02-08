@@ -10,7 +10,7 @@ import android.view.SurfaceView;
 
 public abstract class TransparentBase extends SurfaceView
 {
-	private static final int 	THREAD_OPERATIVE 	= 100;
+	private static final int 	THREAD_OPERATIVE 	= 10000;
 
 	private Object				forceRedraw			= new Object();
 	private SurfaceHolder 		surfaceHolder;

@@ -239,6 +239,8 @@ public class CPUTableauService extends Service implements WatchdogCallback
 
 			startForeground (1, 
 				 		  	 note);
+			
+			Log.d(TAG, "setItForeground. Bringing the service foreground...");
 		}
 	}
 	
@@ -249,6 +251,8 @@ public class CPUTableauService extends Service implements WatchdogCallback
 	    {
 	    	isForeground = false;
 	    	stopForeground (true);
+
+	    	Log.d(TAG, "stopItForeground. Releasing the service from foreground...");
 	    }
 	}
 
