@@ -33,7 +33,6 @@ public class TransparentContent extends TransparentBase
 	private String 					strClock	 			= "no clock";
 	private String 					strOnline	 			= "no cores";
 	private int						storedIntParameter[]	= new int[2];
-	private String					staredStrParameter[]	= new String[1];
 	private Rect 					bounds 					= new Rect();
 
 	private Point					contentSize				= new Point(160, 
