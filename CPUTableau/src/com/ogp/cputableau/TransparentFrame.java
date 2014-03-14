@@ -30,6 +30,7 @@ public class TransparentFrame extends RelativeLayout implements View.OnTouchList
 	private CPUTableauService		service;
 	private WindowManager  			windowManager		= null;
 	private WindowManager.LayoutParams	layoutParams	= null;
+	private LayoutParams			frameParams			= null;
 	private int						widthDisplay;
 	private int						heightDisplay;
 	private Point					contentSize			= new Point();
@@ -139,9 +140,11 @@ public class TransparentFrame extends RelativeLayout implements View.OnTouchList
 		windowManager.addView (this,
 							   layoutParams);
 		
-		addView (transparentClient,
-				 new FrameLayout.LayoutParams (FrameLayout.LayoutParams.FILL_PARENT,
-						 					   FrameLayout.LayoutParams.FILL_PARENT));
+		frameParams = new RelativeLayout.LayoutParams (contentSize.x,
+						 					           contentSize.y);
+
+		addView (transparentClient, 
+			     frameParams);
 		
 		reposition();
 	}
@@ -151,11 +154,13 @@ public class TransparentFrame extends RelativeLayout implements View.OnTouchList
 	{
 		windowManager.removeView (this);
 		
-		layoutParams.width  = contentSize.x;
-		layoutParams.height = contentSize.y;
+		frameParams.width  = layoutParams.width  = contentSize.x;
+		frameParams.height = layoutParams.height = contentSize.y;
 		
 		windowManager.addView (this,
 				   			   layoutParams);
+
+		transparentClient.setLayoutParams (frameParams);
 	}
 	
 	
@@ -334,23 +339,29 @@ public class TransparentFrame extends RelativeLayout implements View.OnTouchList
 					params.width  = contentSize.x; 
 					params.height = contentSize.y; 
 
+					windowManager.removeView (this);
+					
 					setPadding (0, 
 								0, 
 								0, 
 								0);
+
+					windowManager.addView (this, 
+										   params);
 					
 			 	}
 
-				windowManager.updateViewLayout (this, 
-			   									params);
+				transparentClient.refresh (false);
 
 
 				service.saveDefaultXY ((float)params.x / widthDisplay, 
 						   			   (float)params.y / heightDisplay);
 			}
-
+			else
+			{
+				transparentClient.refresh (false);
+			}
 			
-			transparentClient.refresh (false);
 			break;
 		}
 		
