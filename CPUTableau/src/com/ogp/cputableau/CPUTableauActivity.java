@@ -19,6 +19,7 @@ public class CPUTableauActivity extends Activity
     private CheckBox 				cbEnableDebug		= null;
     private CheckBox 				cbEnableNotify 		= null;
     private CheckBox 				cbEnablePWL 		= null;
+    private CheckBox 				cbEnableBTSL 		= null;
     
     
     @Override
@@ -50,11 +51,13 @@ public class CPUTableauActivity extends Activity
         cbEnableDebug   = (CheckBox)viewGroup.findViewById (R.id.cbDebug);
         cbEnableNotify  = (CheckBox)viewGroup.findViewById (R.id.cbNotify);
         cbEnablePWL		= (CheckBox)viewGroup.findViewById (R.id.cbWakelock);
+        cbEnableBTSL	= (CheckBox)viewGroup.findViewById (R.id.cbBTScreenLock);
         
         cbEnableOverlay.setChecked (StateMachine.getOverlay());
         cbEnableDebug.  setChecked (StateMachine.getExtensiveDebug());
         cbEnableNotify. setChecked (StateMachine.getUseNotify());
         cbEnablePWL. 	setChecked (StateMachine.getPWL());
+        cbEnableBTSL. 	setChecked (StateMachine.getBTSL());
         
         if (StateMachine.getOverlay())
         {
@@ -69,6 +72,7 @@ public class CPUTableauActivity extends Activity
 		StateMachine.setExtensiveDebug 	(cbEnableDebug.isChecked());
 		StateMachine.setUseNotify	   	(cbEnableNotify.isChecked());
 		StateMachine.setPWL	 		  	(cbEnablePWL.isChecked());
+		StateMachine.setBTSL 		  	(cbEnableBTSL.isChecked());
 
         StateMachine.writeToPersistantStorage();
 

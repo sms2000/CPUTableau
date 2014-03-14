@@ -12,19 +12,21 @@ public class WatchdogThread extends Thread
 {
 	private static final String TAG 		= "WatchdogThread";
 
-	private static final int 	MAX_STRINGS = 3;
+	private static final int 	MAX_STRINGS = 4;
 	
 	
 	private boolean				threadRun 	= true;
 	private String[]			tempFiles;
 	private String[]			freqFiles;
-	private String				onlineFiles;			
+	private String				onlineFiles;	
+	private String[] 			chargeFiles;
 	private WatchdogCallback 	watchdogCallback;
 	private Handler				mainHandler;				
 	private long				pollingTime	= 1000;
 	private int					tempIndex	= -1;
 	private int					freqIndex	= -1;
 	private int					onlineCPUs	= -1;
+	private int					chargeIndex	= -1;
 	
 	enum DataStatus {None, OK, Error};
 	
@@ -32,7 +34,7 @@ public class WatchdogThread extends Thread
 
 	private String 				oldStrOnline	= "";
 	private int					oldRes[]		= new int[MAX_STRINGS];
-	
+
 	
     private class ErrorTempTask implements Runnable
     {
@@ -47,22 +49,22 @@ public class WatchdogThread extends Thread
     
     private class NewTempTask implements Runnable
     {
-    	private int 	newTemp[];
+    	private int 	newParams[];
     	private String	online;
     	
     	
-    	NewTempTask(int temp[], 
-    				String online)
+    	NewTempTask(int 	params[], 
+    				String 	online)
     	{
-    		this.newTemp 	= temp;
+    		this.newParams 	= params;
     		this.online		= online;
     	}
     	
     	
 		public void run() 
 		{
-			watchdogCallback.setTemp (newTemp, 
-									  online);
+			watchdogCallback.setParams (newParams, 
+									    online);
 		}
     	
     }
@@ -71,11 +73,14 @@ public class WatchdogThread extends Thread
     public WatchdogThread(String			tempFiles[],
     					  String			freqFiles[],
     					  String			onlineFiles,
+						  String[] 			chargeFiles, 
 						  WatchdogCallback	callback)		
 	{
+    	
 		initWatchdogThread (tempFiles,
 							freqFiles,
 							onlineFiles,
+							chargeFiles,
 							callback);
 	}
 	
@@ -97,11 +102,13 @@ public class WatchdogThread extends Thread
 	private void initWatchdogThread (String[]			tempFiles,
 			  						 String[]			freqFiles,
 			  						 String				onlineFiles,
+								     String[] 			chargeFiles, 
 								     WatchdogCallback	callback)
 	{
 		this.tempFiles 		  = tempFiles;
 		this.freqFiles 		  = freqFiles;
 		this.onlineFiles	  = onlineFiles;
+		this.chargeFiles	  = chargeFiles;
 		this.watchdogCallback = callback;
 		this.mainHandler	  = new Handler();
 		
@@ -127,26 +134,23 @@ public class WatchdogThread extends Thread
 	 				if (tempIndex >= tempFiles.length)
 	 				{
 	 					tempIndex = -2;
+	 					Log.e(TAG, "Temperature file not found.");
 	 				}
 				}
 				
-				if (tempIndex == -2)
+				if (tempIndex != -2)
 				{
-					break;
+	 				res[0] = readFileData (tempFiles[tempIndex]);
+					
+	 				if (res[0] <= 0)
+	 				{
+	 					Log.e(TAG, "Error recognizing CPU temp.");
+	 				}
+	 				else
+	 				{
+	 					resOK = true;
+	 				}
 				}
-				
- 				res[0] = readFileData (tempFiles[tempIndex]);
-				
- 				if (res[0] <= 0)
- 				{
- 					Log.e(TAG, "Error recognizing CPU temp.");
- 				}
- 				else
- 				{
- 					if (StateMachine.getExtensiveDebug())
- 					Log.d(TAG, "Result: " + res);
- 					resOK = true;
- 				}
 			}
 			catch(Exception e)
 			{
@@ -184,30 +188,59 @@ public class WatchdogThread extends Thread
 	 				if (freqIndex >= freqFiles.length)
 	 				{
 	 					freqIndex = -2;
+	 					Log.e(TAG, "CPU clock file not found.");
 	 				}
 				}
 				
-				if (freqIndex == -2)
+				if (freqIndex != -2)
 				{
-					break;
+					res[1] = readFileData (freqFiles[freqIndex]);
+					
+					
+	 				if (res[1] <= 0)
+	 				{
+	 					Log.e(TAG, "Error recognizing CPU clock.");
+	 					mainHandler.post (new ErrorTempTask());
+	 				}
+	 				else
+	 				{
+	 					resOK = true;
+	 				}
 				}
+			}
+			catch(Exception e)
+			{
+				Log.e(TAG, "Result: exception.");
+			}
 
+			
+			try
+			{
+				if (-1 == chargeIndex)
+				{
+ 					for (chargeIndex = 0; 
+ 						 chargeIndex < chargeFiles.length; 
+ 						 chargeIndex++)
+	 				{
+	 					if (0 < readFileData (chargeFiles[chargeIndex]))
+	 					{
+	 						break;
+	 					}
+	 				}
+					
+	 				if (chargeIndex >= chargeFiles.length)
+	 				{
+	 					chargeIndex = -2;
+	 					Log.e(TAG, "Charge current file not found.");
+	 				}
+				}
 				
-				res[1] = readFileData (freqFiles[freqIndex]);
-				
-				
- 				if (res[1] <= 0)
- 				{
- 					Log.e(TAG, "Error recognizing CPU clock.");
- 					mainHandler.post (new ErrorTempTask());
- 				}
- 				else
- 				{
- 					if (StateMachine.getExtensiveDebug())
- 						Log.d(TAG, "Result: " + res);
- 					
+				if (chargeIndex != -2)
+				{
+					res[2] = readFileData (chargeFiles[freqIndex]);
+					
  					resOK = true;
- 				}
+				}
 			}
 			catch(Exception e)
 			{
@@ -229,6 +262,12 @@ public class WatchdogThread extends Thread
 			}
 
 			
+			if (StateMachine.getExtensiveDebug())
+			{
+				Log.d(TAG, "Result: " + res);
+			}
+			
+			
 			if (resOK)
 			{
 				boolean updated = updateOldData  (res, 
@@ -242,7 +281,7 @@ public class WatchdogThread extends Thread
 					dataStatus = DataStatus.OK; 
 					
 					mainHandler.post (new NewTempTask (res, 
-														strOnline));
+													   strOnline));
 				}
 			}
 			else
@@ -268,7 +307,7 @@ public class WatchdogThread extends Thread
 	
 	
 	private boolean updateOldData (int[] 		res, 
-								  String 		strOnline) 
+								   String 		strOnline) 
 	{
 		boolean updated = false;
 		

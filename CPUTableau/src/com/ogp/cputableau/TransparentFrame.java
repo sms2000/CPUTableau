@@ -13,7 +13,7 @@ import android.widget.FrameLayout;
 import android.widget.RelativeLayout;
 
 
-public class TransparentFrame extends RelativeLayout implements View.OnTouchListener
+public class TransparentFrame extends RelativeLayout implements View.OnTouchListener, TransparentContentCallback
 {
 	private static final String 	TAG					= "TransparentFrame";
 
@@ -28,7 +28,8 @@ public class TransparentFrame extends RelativeLayout implements View.OnTouchList
 
 	private Object					lock				= new Object();
 	private CPUTableauService		service;
-	private WindowManager  			windowManager		= null;	
+	private WindowManager  			windowManager		= null;
+	private WindowManager.LayoutParams	layoutParams	= null;
 	private int						widthDisplay;
 	private int						heightDisplay;
 	private Point					contentSize			= new Point();
@@ -75,7 +76,7 @@ public class TransparentFrame extends RelativeLayout implements View.OnTouchList
 			windowManager.updateViewLayout (TransparentFrame.this, 
 		   									params);
 
-			transparentClient.refresh();
+			transparentClient.refresh (false);
 		}
 	}
 	
@@ -97,38 +98,64 @@ public class TransparentFrame extends RelativeLayout implements View.OnTouchList
 		this.transparentClient		= transparentClient;
 		this.windowManager			= (WindowManager)service.getSystemService (Context.WINDOW_SERVICE);
 
+		
+		transparentClient.setContentCallback (this);
 
 		widthDisplay  = windowManager.getDefaultDisplay().getWidth();
 		heightDisplay = windowManager.getDefaultDisplay().getHeight();
 		
 		setOnTouchListener (this);
 		
+		loadContentSize();
+		setContentWindow();
+	}
+	
+	
+	private void loadContentSize()
+	{
 		transparentClient.getContentSize (contentSize);		
 		
 		contentHalfSize.x = contentSize.x / 2;
 		contentHalfSize.y = contentSize.y / 2;
-		
+	}
+	
+	
+	private void setContentWindow()
+	{
 		float X = service.loadDefaultX();
 		float Y = service.loadDefaultY();
 		
-		
+		layoutParams = new WindowManager.LayoutParams(contentSize.x,
+							   						  contentSize.y,
+							   						  (int)(X * widthDisplay),
+							   						  (int)(Y * heightDisplay),
+							   						  WindowManager.LayoutParams.TYPE_SYSTEM_ERROR,
+				                					  WindowManager.LayoutParams.FLAG_FULLSCREEN 		|
+			                					  	  WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS	|
+			                					  	  WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN 	|
+				                					  WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
+				                					  PixelFormat.TRANSLUCENT);
+
 		windowManager.addView (this,
-							   new WindowManager.LayoutParams(contentSize.x,
-									   						  contentSize.y,
-									   						  (int)(X * widthDisplay),
-									   						  (int)(Y * heightDisplay),
-									   						  WindowManager.LayoutParams.TYPE_SYSTEM_ERROR,
-						                					  WindowManager.LayoutParams.FLAG_FULLSCREEN 		|
-					                					  	  WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS	|
-					                					  	  WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN 	|
-						                					  WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
-						                					  PixelFormat.TRANSLUCENT));
+							   layoutParams);
 		
 		addView (transparentClient,
-				 new FrameLayout.LayoutParams (contentSize.x,
-						 					   contentSize.y));
+				 new FrameLayout.LayoutParams (FrameLayout.LayoutParams.FILL_PARENT,
+						 					   FrameLayout.LayoutParams.FILL_PARENT));
 		
 		reposition();
+	}
+	
+	
+	private void adjustContentWindow()
+	{
+		windowManager.removeView (this);
+		
+		layoutParams.width  = contentSize.x;
+		layoutParams.height = contentSize.y;
+		
+		windowManager.addView (this,
+				   			   layoutParams);
 	}
 	
 	
@@ -216,7 +243,7 @@ public class TransparentFrame extends RelativeLayout implements View.OnTouchList
 				params.height = heightDisplay; 
 				
 				transparentClient.waitUpdate (WAIT_UPDATE);
-				transparentClient.refresh();
+				transparentClient.refresh (false);
 			}
 			
 			setPadding (downPoint.x, 
@@ -323,7 +350,7 @@ public class TransparentFrame extends RelativeLayout implements View.OnTouchList
 			}
 
 			
-			transparentClient.refresh();
+			transparentClient.refresh (false);
 			break;
 		}
 		
@@ -364,11 +391,11 @@ public class TransparentFrame extends RelativeLayout implements View.OnTouchList
 	}
 
 
-	public void setTemp (int[] 	temp, 
-						 String online) 
+	public void setParams (int[] 	params, 
+						   String 	online) 
 	{
-		transparentClient.updateParameters (temp, 
-								   online);
+		transparentClient.updateParameters (params, 
+								   			online);
 	}
 
 	
@@ -382,5 +409,16 @@ public class TransparentFrame extends RelativeLayout implements View.OnTouchList
 		handler.post (new ActivateMove(params, 
 									   0, 
 									   0));
+	}
+
+
+	public void contentSizeChanged() 
+	{
+		Log.d(TAG, "TransparentFrame size changed.");
+
+		loadContentSize();
+		adjustContentWindow();
+		
+		transparentClient.refresh();
 	}
 }

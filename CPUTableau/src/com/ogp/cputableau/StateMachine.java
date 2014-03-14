@@ -11,6 +11,7 @@ public class StateMachine
 	private static final String 			EXTENSIVE_DEBUG			= "ExtensiveDebug";
 	private static final String 			USE_NOTIFY				= "UseNotify";
 	private static final String 			USE_PWL					= "UsePWL";
+	private static final String 			BT_SC_LOCK				= "BTScreenLock";
 	
 	private static Context					appContext;
 	
@@ -18,6 +19,7 @@ public class StateMachine
 	private static boolean 					useNotify;
 	private static boolean 					useOverlay;
 	private static boolean 					usePWL;
+	private static boolean 					useBTSL;
 
 	private static boolean 					activityRun;
 	
@@ -39,6 +41,7 @@ public class StateMachine
 		extensiveDebug				= false;
 		useNotify					= false;
 		usePWL						= false;
+		useBTSL						= false;
 		
 		readFromPersistantStorage();
 	}
@@ -53,6 +56,7 @@ public class StateMachine
 		extensiveDebug 	= pref.getBoolean 	(EXTENSIVE_DEBUG, 	extensiveDebug);
 		useNotify	 	= pref.getBoolean 	(USE_NOTIFY, 		useNotify);
 		usePWL			= pref.getBoolean 	(USE_PWL, 			usePWL);
+		useBTSL			= pref.getBoolean 	(BT_SC_LOCK,		useBTSL);
 	}
 
 	
@@ -67,6 +71,7 @@ public class StateMachine
 		editor.putBoolean	(EXTENSIVE_DEBUG, 		extensiveDebug);
 		editor.putBoolean	(USE_NOTIFY, 			useNotify);
 		editor.putBoolean	(USE_PWL, 				usePWL);
+		editor.putBoolean	(BT_SC_LOCK, 			useBTSL);
 		
 		editor.commit();
 	}
@@ -85,6 +90,8 @@ public class StateMachine
 	public static boolean 	getPWL					() 				{return usePWL;}
 	public static void		setPWL					(boolean value)	{usePWL = value;}
 
+	public static boolean 	getBTSL					() 				{return useBTSL;}
+	public static void		setBTSL					(boolean value)	{useBTSL = value;}
 
 // Not preserved (local state)	
 	public static void 		setActivityRun			(boolean value) {activityRun = value;}

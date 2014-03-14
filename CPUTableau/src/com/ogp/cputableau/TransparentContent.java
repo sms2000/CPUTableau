@@ -25,6 +25,8 @@ public class TransparentContent extends TransparentBase
 	private static final int 		PAINT_1				= 0xD0F03030;
 	private static final int 		PAINT_2				= 0xD0F0F020;
 
+	private static final int 		MAX_PARAMS 			= 3;
+
 
 	private Paint 					overlayPaint[]			= new Paint[3];
 	private Paint 					dashPaint 				= new Paint();
@@ -32,13 +34,16 @@ public class TransparentContent extends TransparentBase
 	private String 					strTemperature 			= "no temp";
 	private String 					strClock	 			= "no clock";
 	private String 					strOnline	 			= "no cores";
-	private int						storedIntParameter[]	= new int[2];
+	private String 					strCharge				= null;
+	private int						storedIntParameter[]	= new int[MAX_PARAMS];
 	private Rect 					bounds 					= new Rect();
 
 	private Point					contentSize				= new Point(160, 
 																		55);
 	private int 					tempDivider				= 0;
-	
+
+	private TransparentContentCallback transparentContentCallback = null;
+		
 	
 	public TransparentContent(Context context)
 	{
@@ -115,6 +120,14 @@ public class TransparentContent extends TransparentBase
 						 (bounds.height() + Y_PRIME) * 3,
 		 		 		 overlayPaint[paint]);
 		
+		if (null != strCharge)
+		{
+			canvas.drawText (strCharge,
+					 		 X_PRIME,
+					 		 (bounds.height() + Y_PRIME) * 4,
+					 		 overlayPaint[paint]);
+		}
+		
 		return true;
 	}
 
@@ -134,8 +147,9 @@ public class TransparentContent extends TransparentBase
 		}
 
 		strOnline = "???";
+		strCharge = null;
 		
-		refresh();
+		refresh (true);
 	}
 
 
@@ -159,7 +173,8 @@ public class TransparentContent extends TransparentBase
 		
 		storedIntParameter[0] = parameter[0] / tempDivider;
 		storedIntParameter[1] = parameter[1] / 1000;
-		
+		storedIntParameter[2] = parameter[2];
+				
 
 		if (0 == storedIntParameter[0])
 		{
@@ -170,12 +185,18 @@ public class TransparentContent extends TransparentBase
 			strTemperature = String.format ("%d°C", 
 											storedIntParameter[0]);
 		}
+		
 		strClock = String.format ("%d MHz", 
 								  storedIntParameter[1]);
 		
 		strOnline = online;
 
-		refresh();
+		
+		String strNewCharge = storedIntParameter[2] <= 0 ? null : String.format ("%d mA", storedIntParameter[2]);
+		boolean overlaySizeChanged = (strNewCharge == null) != (strCharge == null);
+		strCharge = strNewCharge;
+		
+		refresh (overlaySizeChanged);
 	}
 
 
@@ -186,8 +207,16 @@ public class TransparentContent extends TransparentBase
 	    							   maxString.length(), 
 	    							   bounds);
 
-	    contentSize.x = bounds.width()      + X_PRIME * 2;
-		contentSize.y = bounds.height() * 3 + Y_PRIME * 4;
+	    contentSize.x = bounds.width() + X_PRIME * 2;
+	    
+	    if (strCharge == null)
+	    {
+	    	contentSize.y = bounds.height() * 3 + Y_PRIME * 4; 
+	    }
+	    else
+	    {
+	    	contentSize.y = bounds.height() * 4 + Y_PRIME * 5;
+	    }
 	}
 	
 	
@@ -195,5 +224,22 @@ public class TransparentContent extends TransparentBase
 	protected void drawPanelImage (Canvas canvas) 
 	{
 		drawOverlay (canvas);
+	}
+
+	
+	public void refresh (boolean overlaySizeChanged)
+    {
+		if (overlaySizeChanged && transparentContentCallback != null) 
+		{
+			transparentContentCallback.contentSizeChanged();
+		}
+		
+		super.refresh();
+    }
+
+
+	public void setContentCallback (TransparentContentCallback transparentContentCallback) 
+	{
+		this.transparentContentCallback = transparentContentCallback;
 	}
 }

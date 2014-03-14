@@ -15,6 +15,8 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.os.PowerManager;
 import android.os.PowerManager.WakeLock;
+import android.telephony.PhoneStateListener;
+import android.telephony.TelephonyManager;
 import android.util.Log;
 
 
@@ -26,6 +28,10 @@ public class CPUTableauService extends Service implements WatchdogCallback
 
 	private static CPUTableauService	thisService			= null; 
 
+	private TelephonyManager 		telephonyManager 		= null;
+	private PhoneStateListener		phoneStateListener		= new MyPhoneStateListener();
+    private int						callState				= -1;
+	
 	private WatchdogThread			watchdogThread 			= null;
 	private TransparentFrame	 	transparentFrame;
 
@@ -34,6 +40,7 @@ public class CPUTableauService extends Service implements WatchdogCallback
 	private BroadcastReceiver 		screenInfoReceiverOff;
 	private boolean 				isForeground			= false;
 	private WakeLock 				partialWakelock			= null;
+	private WakeLock 				screenWakelock			= null;
 	private Handler					handler					= new Handler();
 	
 	private static final String[]	tempFiles				= new String[]{
@@ -53,6 +60,8 @@ public class CPUTableauService extends Service implements WatchdogCallback
 
 	private static final String		onlineFiles				= "/sys/devices/system/cpu/cpu%d/online";
 
+	private static final String[]	chargeFiles				= new String[]{"/sys/class/power_supply/battery/current_now"};
+	
 	
 	private class ActivatePane implements Runnable
 	{
@@ -61,6 +70,24 @@ public class CPUTableauService extends Service implements WatchdogCallback
 			transparentFrame = new TransparentFrame(CPUTableauService.this, 
 													new TransparentContent(CPUTableauService.this)); 
 		}
+	}
+	
+	
+	private class MyPhoneStateListener extends PhoneStateListener
+	{
+		public void onCallStateChanged (int 		state, 
+										String 		incomingNumber) 
+		{
+			Log.v(TAG, String.format ("In-call state: %d", 
+									  state));
+			
+			setNewCallState (state);
+			
+			
+			super.onCallStateChanged (state, 
+									  incomingNumber);
+	    }
+
 	}
 	
 
@@ -84,11 +111,16 @@ public class CPUTableauService extends Service implements WatchdogCallback
 		
 		setOverlayPaneInternal();
 		
+		telephonyManager = (TelephonyManager)thisService.getSystemService (Context.TELEPHONY_SERVICE);
+		
 		PowerManager pm = (PowerManager)getSystemService (Context.POWER_SERVICE);
 
 		partialWakelock = pm.newWakeLock (PowerManager.PARTIAL_WAKE_LOCK, 
 										  "Permanent PWL");
  
+		screenWakelock = pm.newWakeLock (PowerManager.SCREEN_DIM_WAKE_LOCK, 
+				  						 "Screen dimmed WL");
+		
 		batteryInfoReceiver = new BroadcastReceiver()
 		{
 		    @Override
@@ -137,6 +169,9 @@ public class CPUTableauService extends Service implements WatchdogCallback
 		registerReceiver (screenInfoReceiverOff,
 				  		  new IntentFilter (Intent.ACTION_SCREEN_OFF));
 
+		telephonyManager.listen (phoneStateListener, 
+		                         PhoneStateListener.LISTEN_CALL_STATE);
+		
 		wakeUp (true);
 	}
 
@@ -149,6 +184,9 @@ public class CPUTableauService extends Service implements WatchdogCallback
 		thisService = null;
 
 		wakeUp (false);
+
+		telephonyManager.listen (phoneStateListener, 
+                				 PhoneStateListener.LISTEN_NONE);
 
     	unregisterReceiver (batteryInfoReceiver);
     	unregisterReceiver (screenInfoReceiverOn);
@@ -335,10 +373,11 @@ public class CPUTableauService extends Service implements WatchdogCallback
 				handler.post (new ActivatePane());
 			}
 			
-			watchdogThread = new WatchdogThread (tempFiles, 
-												 freqFiles,
-												 onlineFiles,
-												 this);
+			watchdogThread = new WatchdogThread(tempFiles, 
+												freqFiles,
+												onlineFiles,
+												chargeFiles,
+												this);
 
 			setItForeground();
 		}
@@ -371,13 +410,13 @@ public class CPUTableauService extends Service implements WatchdogCallback
 	}
 
 
-	public void setTemp (int 		temp[], 
-						 String 	online) 
+	public void setParams (int 		params[], 
+						   String 	online) 
 	{
 		try
 		{
-			transparentFrame.setTemp (temp, 	
-							      	  online);
+			transparentFrame.setParams (params, 	
+							      	    online);
 		}
 		catch(Exception e)
 		{
@@ -442,5 +481,53 @@ public class CPUTableauService extends Service implements WatchdogCallback
 				 		 y);
 		
 		editor.commit();
+	}
+
+	
+	public void setNewCallState (int newCallState) 
+	{
+		if (TelephonyManager.CALL_STATE_IDLE != newCallState)
+		{
+			newCallState = TelephonyManager.CALL_STATE_OFFHOOK;
+		}
+		
+		if (newCallState == callState
+			||
+			!StateMachine.getBTSL())
+		{
+			return;
+		}
+		
+		
+		Log.e(TAG, String.format ("setNewCallState. New call state: [%s]",
+								  (newCallState != TelephonyManager.CALL_STATE_IDLE) ? "active" : "off"));
+		
+		callState = newCallState;
+		
+		setNewScreenLockForBTState (newCallState != TelephonyManager.CALL_STATE_IDLE);
+	}
+
+
+	@SuppressLint("Wakelock")
+	private void setNewScreenLockForBTState (boolean newBTSLState) 
+	{
+		if (null != screenWakelock)
+		{
+			if (!newBTSLState)
+			{
+				if (screenWakelock.isHeld())
+				{
+					screenWakelock.release();
+	
+					Log.w(TAG, "Screen dimmed WL is dropped successfully.");
+				}
+			}
+			else if (StateMachine.getBTSL())
+			{
+				screenWakelock.acquire();
+					
+				Log.w(TAG, "Screen dimmed WL is acquired successfully.");
+			}
+		}
 	}
 }
