@@ -59,7 +59,30 @@
 		    android:layout_height="wrap_content"
 		    android:text="@string/dialog.wakelock" />
 		
+		<CheckBox
+		    android:id="@+id/cbBTScreenLock"
+		    android:layout_marginLeft="30dp"
+		    android:layout_marginTop="20dp"
+		    android:layout_marginRight="20dp"
+		    android:layout_width="wrap_content"
+		    android:layout_height="wrap_content"
+		    android:text="@string/dialog.btscreenlock" />
+
+		<TextView 
+		    android:id="@+id/tvTransparency"
+		    android:layout_marginLeft="30dp"
+		    android:layout_marginTop="20dp"
+		    android:layout_marginRight="20dp"
+		    android:layout_width="wrap_content"
+		    android:layout_height="wrap_content"
+		    android:text="@string/dialog.tvTransparency" />
 		
+		<SeekBar
+		    android:id="@+id/sbTransparecy"
+		    android:layout_width="match_parent"
+		    android:layout_height="wrap_content" 
+		    android:max = "255"/>
+						
 		<Button
 		    android:id="@+id/btOK"
 		    android:layout_marginTop="20dp"

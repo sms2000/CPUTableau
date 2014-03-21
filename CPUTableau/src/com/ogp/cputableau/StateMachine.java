@@ -12,6 +12,7 @@ public class StateMachine
 	private static final String 			USE_NOTIFY				= "UseNotify";
 	private static final String 			USE_PWL					= "UsePWL";
 	private static final String 			BT_SC_LOCK				= "BTScreenLock";
+	private static final String 			TRANSPARENCY			= "Transparency";
 	
 	private static Context					appContext;
 	
@@ -22,6 +23,9 @@ public class StateMachine
 	private static boolean 					useBTSL;
 
 	private static boolean 					activityRun;
+	private static int 						transparency;
+	private static boolean 					screenOn;
+	private static float 					batteryTemp;
 	
 	
 	private StateMachine()
@@ -35,6 +39,8 @@ public class StateMachine
 		
 		
 		activityRun					= false;
+		screenOn					= true;
+		batteryTemp					= -1.0f;
 		
 // Defaults
 		useOverlay					= true;
@@ -42,6 +48,7 @@ public class StateMachine
 		useNotify					= false;
 		usePWL						= false;
 		useBTSL						= false;
+		transparency				= 200;
 		
 		readFromPersistantStorage();
 	}
@@ -57,6 +64,7 @@ public class StateMachine
 		useNotify	 	= pref.getBoolean 	(USE_NOTIFY, 		useNotify);
 		usePWL			= pref.getBoolean 	(USE_PWL, 			usePWL);
 		useBTSL			= pref.getBoolean 	(BT_SC_LOCK,		useBTSL);
+		transparency	= pref.getInt		(TRANSPARENCY, 		transparency);
 	}
 
 	
@@ -72,6 +80,7 @@ public class StateMachine
 		editor.putBoolean	(USE_NOTIFY, 			useNotify);
 		editor.putBoolean	(USE_PWL, 				usePWL);
 		editor.putBoolean	(BT_SC_LOCK, 			useBTSL);
+		editor.putInt		(TRANSPARENCY, 			transparency);
 		
 		editor.commit();
 	}
@@ -93,7 +102,18 @@ public class StateMachine
 	public static boolean 	getBTSL					() 				{return useBTSL;}
 	public static void		setBTSL					(boolean value)	{useBTSL = value;}
 
+	public static int 		getTransparency			() 				{return transparency;}
+	public static void 		setTransparency			(int	 value)	{transparency = value;}
+
 // Not preserved (local state)	
 	public static void 		setActivityRun			(boolean value) {activityRun = value;}
 	public static boolean	isActivityRun			() 				{return activityRun;}
+
+	public static void 		setScreenOn				(boolean value) {screenOn = value;}
+	public static boolean	getScreenOn				() 				{return screenOn;}
+
+
+	public static void      setBatteryTemp			(float value)	{batteryTemp = value;}
+	public static float     getBatteryTemp			() 				{return batteryTemp;}
 }
+

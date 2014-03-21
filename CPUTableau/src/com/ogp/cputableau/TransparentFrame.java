@@ -1,5 +1,6 @@
 package com.ogp.cputableau;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.PixelFormat;
@@ -9,10 +10,10 @@ import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.WindowManager;
-import android.widget.FrameLayout;
 import android.widget.RelativeLayout;
 
 
+@SuppressLint("ViewConstructor")
 public class TransparentFrame extends RelativeLayout implements View.OnTouchListener, TransparentContentCallback
 {
 	private static final String 	TAG					= "TransparentFrame";
@@ -77,7 +78,7 @@ public class TransparentFrame extends RelativeLayout implements View.OnTouchList
 			windowManager.updateViewLayout (TransparentFrame.this, 
 		   									params);
 
-			transparentClient.refresh (false);
+			refresh();
 		}
 	}
 	
@@ -212,7 +213,7 @@ public class TransparentFrame extends RelativeLayout implements View.OnTouchList
 		
 		if (StateMachine.getExtensiveDebug())
 		{
-			Log.v(TAG, String.format ("A: %d  X/Y:%d/%d",
+			Log.v(TAG, String.format ("onTouch. A: %d  X/Y:%d/%d",
 									  event.getAction(),
 									  (int)event.getX(),
 									  (int)event.getY()));
@@ -248,7 +249,6 @@ public class TransparentFrame extends RelativeLayout implements View.OnTouchList
 				params.height = heightDisplay; 
 				
 				transparentClient.waitUpdate (WAIT_UPDATE);
-				transparentClient.refresh (false);
 			}
 			
 			setPadding (downPoint.x, 
@@ -256,7 +256,7 @@ public class TransparentFrame extends RelativeLayout implements View.OnTouchList
 						0,
 						0);
 		
-			windowManager.updateViewLayout (TransparentFrame.this, 
+			windowManager.updateViewLayout (this, 
 	   										params);
 
 			break;
@@ -271,7 +271,7 @@ public class TransparentFrame extends RelativeLayout implements View.OnTouchList
 				{
 					if (timeNow - lastClickTime < CLICK_TIME)
 					{
-						Log.d(TAG, "Double click encountered. Do whatever...");
+						Log.d(TAG, "onTouch. Double click encountered. Do whatever...");
 
 						lastClickTime 	= 0;
 						motionHappen 	= false;
@@ -280,6 +280,8 @@ public class TransparentFrame extends RelativeLayout implements View.OnTouchList
 					}
 					else
 					{
+						Log.d(TAG, "onTouch. Single click suspected...");
+
 						lastClickTime = timeNow;
 
 						new Handler().postDelayed (new VerifySingleClick(),
@@ -319,47 +321,60 @@ public class TransparentFrame extends RelativeLayout implements View.OnTouchList
 			{
 				downPoint.x = X;
 				downPoint.y = Y;
+			}
 
+
+			if (MotionEvent.ACTION_MOVE == event.getAction())
+			{
 				setPadding (downPoint.x, 
 							downPoint.y, 
 							0, 
 							0);
+				
+				refresh();
 			}
-
-
-			if (MotionEvent.ACTION_MOVE != event.getAction())
+			else
 			{
+				Log.d(TAG, "onTouch. Released. Moving finished.");
+
 				params = (WindowManager.LayoutParams)getLayoutParams();
 
 				synchronized(lock)
 				{
 					params.x = X -  widthDisplay / 2 + contentHalfSize.x;
 					params.y = Y - heightDisplay / 2 + contentHalfSize.y;
-					
+						
 					params.width  = contentSize.x; 
 					params.height = contentSize.y; 
+				}
 
-					windowManager.removeView (this);
-					
-					setPadding (0, 
-								0, 
-								0, 
-								0);
+				setVisibility (View.INVISIBLE);
+				
+				setPadding (0, 
+					    	0, 
+					    	0, 
+					    	0);
 
-					windowManager.addView (this, 
-										   params);
-					
-			 	}
 
-				transparentClient.refresh (false);
+				windowManager.updateViewLayout (this, 
+												params);
 
+				
+				new Handler().post (new Runnable()
+				{
+					public void run() 
+					{
+						transparentClient.waitUpdate (WAIT_UPDATE);
+						
+						setVisibility (View.VISIBLE);
+					}
+				});
+				
+
+				motionHappen = false;
 
 				service.saveDefaultXY ((float)params.x / widthDisplay, 
-						   			   (float)params.y / heightDisplay);
-			}
-			else
-			{
-				transparentClient.refresh (false);
+						   			   (float)params.y / heightDisplay); 
 			}
 			
 			break;
@@ -430,6 +445,12 @@ public class TransparentFrame extends RelativeLayout implements View.OnTouchList
 		loadContentSize();
 		adjustContentWindow();
 		
+		refresh();
+	}
+	
+	
+	public void refresh()
+	{
 		transparentClient.refresh();
 	}
 }

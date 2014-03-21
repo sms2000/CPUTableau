@@ -52,7 +52,7 @@ public abstract class TransparentBase extends SurfaceView
 						catch(InterruptedException e)
 						{
 					    }
-					}
+					} 
 
 					
 					if (null == surfaceHolder)

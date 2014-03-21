@@ -1,25 +1,27 @@
 package com.ogp.cputableau;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Point;
 import android.graphics.Rect;
 import android.graphics.PorterDuff;
+import android.util.Log;
 
 
+@SuppressLint("DefaultLocale")
 public class TransparentContent extends TransparentBase
 {
-	@SuppressWarnings("unused")
 	private static final String 	TAG					= "TransparentContent";
 
-	private static final String 	maxString			= "8888 MHz.";
+	private static final String 	maxString			= "99bC / 99.9bC";
 
 	private static final int 		X_PRIME 			= 6;
 	private static final int 		Y_PRIME 			= 6;
 	private static final int 		TEXT_SIZE 			= 32;
 
-	private static final int 		BACKGROUND_COLOR 	= 0x404040FF;
+	private static final int 		BACKGROUND_COLOR 	= 0x00707040;
 	private static final int 		GREY_COLOR 			= 0xA0A0A0A0;
 	private static final int 		PAINT_0				= 0xD040F0F0;
 	private static final int 		PAINT_1				= 0xD0F03030;
@@ -43,7 +45,7 @@ public class TransparentContent extends TransparentBase
 	private int 					tempDivider				= 0;
 
 	private TransparentContentCallback transparentContentCallback = null;
-		
+
 	
 	public TransparentContent(Context context)
 	{
@@ -81,7 +83,7 @@ public class TransparentContent extends TransparentBase
 			return false;
 		}
 		
-		canvas.drawColor (BACKGROUND_COLOR);
+		canvas.drawColor (BACKGROUND_COLOR | (StateMachine.getTransparency() << 24));
 		
 			
 		overlayPaint[0].getTextBounds (maxString, 
@@ -153,6 +155,7 @@ public class TransparentContent extends TransparentBase
 	}
 
 
+	@SuppressLint("DefaultLocale")
 	public void updateParameters (int 		parameter[], 
 						 		  String 	online) 
 	{
@@ -182,8 +185,17 @@ public class TransparentContent extends TransparentBase
 		}
 		else
 		{
-			strTemperature = String.format ("%d°C", 
-											storedIntParameter[0]);
+			if (0.0f < StateMachine.getBatteryTemp())
+			{
+				strTemperature = String.format ("%d°C / %.1f°C", 
+												storedIntParameter[0],
+												StateMachine.getBatteryTemp());
+			}
+			else
+			{
+				strTemperature = String.format ("%d°C", 
+												storedIntParameter[0]);
+			}
 		}
 		
 		strClock = String.format ("%d MHz", 
@@ -195,6 +207,17 @@ public class TransparentContent extends TransparentBase
 		String strNewCharge = storedIntParameter[2] <= 0 ? null : String.format ("%d mA", storedIntParameter[2]);
 		boolean overlaySizeChanged = (strNewCharge == null) != (strCharge == null);
 		strCharge = strNewCharge;
+
+		if (overlaySizeChanged)
+		{
+			Log.i(TAG, "updateParameters. Overlay size changed.");
+		}
+		
+		if (StateMachine.getExtensiveDebug())
+		{
+			Log.v(TAG, String.format ("updateParameters. Charge: %s.",
+									  null != strNewCharge ? strNewCharge : "<no charge>"));
+		}
 		
 		refresh (overlaySizeChanged);
 	}

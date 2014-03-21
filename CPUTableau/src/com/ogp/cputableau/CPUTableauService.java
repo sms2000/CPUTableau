@@ -11,7 +11,6 @@ import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 import android.os.BatteryManager;
-import android.os.Handler;
 import android.os.IBinder;
 import android.os.PowerManager;
 import android.os.PowerManager.WakeLock;
@@ -41,7 +40,6 @@ public class CPUTableauService extends Service implements WatchdogCallback
 	private boolean 				isForeground			= false;
 	private WakeLock 				partialWakelock			= null;
 	private WakeLock 				screenWakelock			= null;
-	private Handler					handler					= new Handler();
 	
 	private static final String[]	tempFiles				= new String[]{
 																			"/sys/devices/system/cpu/cpu0/cpufreq/cpu_temp",
@@ -62,15 +60,6 @@ public class CPUTableauService extends Service implements WatchdogCallback
 
 	private static final String[]	chargeFiles				= new String[]{"/sys/class/power_supply/battery/current_now"};
 	
-	
-	private class ActivatePane implements Runnable
-	{
-		public void run() 
-		{
-			transparentFrame = new TransparentFrame(CPUTableauService.this, 
-													new TransparentContent(CPUTableauService.this)); 
-		}
-	}
 	
 	
 	private class MyPhoneStateListener extends PhoneStateListener
@@ -109,7 +98,7 @@ public class CPUTableauService extends Service implements WatchdogCallback
 		
 		StateMachine.init (this);
 		
-		setOverlayPaneInternal();
+		setOverlayPane();
 		
 		telephonyManager = (TelephonyManager)thisService.getSystemService (Context.TELEPHONY_SERVICE);
 		
@@ -127,11 +116,15 @@ public class CPUTableauService extends Service implements WatchdogCallback
 		    public void onReceive (Context 	arg0,
 		    					   Intent 	intent)
 		    {
-		    	int temperature = intent.getIntExtra (BatteryManager.EXTRA_TEMPERATURE,
-		    		  								  0);
+		    	float temperature = 0.1f * (float)intent.getIntExtra (BatteryManager.EXTRA_TEMPERATURE,
+		    		  								                  0);
 
 				if (StateMachine.getExtensiveDebug())
-		    	Log.d(TAG, "Battery temperature: " + (float)temperature / 10.0);
+				{
+					Log.d(TAG, "Battery temperature: " + temperature);
+				}
+				
+				setBatteryTemperature (temperature);
 		    }
 		};
 
@@ -146,7 +139,7 @@ public class CPUTableauService extends Service implements WatchdogCallback
 		    {
 		    	Log.d(TAG, "Screen ON");
 		    	
-	    		wakeUp (true);
+		    	screenOn (true);
 		    }
 		};
 
@@ -161,7 +154,7 @@ public class CPUTableauService extends Service implements WatchdogCallback
 		    {
 		    	Log.d(TAG, "Screen OFF");
 		    	
-		    	wakeUp (false);
+		    	screenOn (false);
 		    }
 		};
 
@@ -181,22 +174,17 @@ public class CPUTableauService extends Service implements WatchdogCallback
 	{
     	Log.d(TAG, "onDestroy processing...");
 
-		thisService = null;
-
 		wakeUp (false);
+		screenOn (false);
 
-		telephonyManager.listen (phoneStateListener, 
+    	telephonyManager.listen (phoneStateListener, 
                 				 PhoneStateListener.LISTEN_NONE);
 
     	unregisterReceiver (batteryInfoReceiver);
     	unregisterReceiver (screenInfoReceiverOn);
     	unregisterReceiver (screenInfoReceiverOff);
-    	
-    	if (null != transparentFrame)
-    	{
-    		transparentFrame.dismiss();
-    		transparentFrame = null;
-    	}
+
+		thisService = null;
     	
 		super.onDestroy();
 	}
@@ -218,16 +206,26 @@ public class CPUTableauService extends Service implements WatchdogCallback
 	    	stopItForeground();
 		}
 		
-    	pwlProcessing (wakeUp);
+    	pwlProcessing();
+    	setOverlayPane();
+	}
+
+	
+	private void screenOn (boolean wakeUp)
+	{
+		StateMachine.setScreenOn (wakeUp);
+		
+    	pwlProcessing();
+    	setOverlayPane();
 	}
 
 	
 	@SuppressLint("Wakelock")
-	private void pwlProcessing (boolean wakeUp) 
+	private void pwlProcessing() 
 	{
 		if (null != partialWakelock)
 		{
-			if (wakeUp)
+			if (StateMachine.getScreenOn())
 			{
 				if (partialWakelock.isHeld())
 				{
@@ -364,21 +362,27 @@ public class CPUTableauService extends Service implements WatchdogCallback
 	
 	private void setOverlayPaneInternal()
 	{
-		boolean now = StateMachine.getOverlay();
+		boolean now = StateMachine.getOverlay() 
+				      && 
+				      StateMachine.getScreenOn();
 		
 		if (now)
 		{
 			if (null == transparentFrame)
 			{
-				handler.post (new ActivatePane());
+				transparentFrame = new TransparentFrame(CPUTableauService.this, 
+												    	new TransparentContent(CPUTableauService.this));
 			}
 			
-			watchdogThread = new WatchdogThread(tempFiles, 
-												freqFiles,
-												onlineFiles,
-												chargeFiles,
-												this);
-
+			if (null == watchdogThread)
+			{
+				watchdogThread = new WatchdogThread(tempFiles, 
+													freqFiles,
+													onlineFiles,
+													chargeFiles,
+													this);
+			}
+			
 			setItForeground();
 		}
 		else
@@ -529,5 +533,29 @@ public class CPUTableauService extends Service implements WatchdogCallback
 				Log.w(TAG, "Screen dimmed WL is acquired successfully.");
 			}
 		}
+	}
+
+
+	public static void quickUpdate() 
+	{
+		try
+		{
+			thisService.transparentFrame.refresh();
+			
+			Log.w(TAG, "quickUpdate. Succeeded.");
+		}
+		catch(Exception e)
+		{
+			Log.e(TAG, "quickUpdate. EXC(1)");
+		}
+	}
+
+	
+	protected void setBatteryTemperature (float temperature) 
+	{
+		StateMachine.setBatteryTemp (temperature);
+
+		Log.w(TAG, String.format ("setBatteryTemperature. Succeeded. New battery temperature: %.1f degC.", 
+								  temperature));		
 	}
 }
