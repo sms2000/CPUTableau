@@ -3,6 +3,14 @@ CPUTableau
 
 Permanent overlay window presenting the CPU temperature, clock and active cores.
 
+1.8.138
+-------
+
+1. Font size configurable from Activity.
+
+2. Motion improved slightly. Yet a lot to be done to make really smooth. 
+
+
 
 1.7.131
 -------
