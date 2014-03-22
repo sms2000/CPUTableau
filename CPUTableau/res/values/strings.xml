@@ -11,6 +11,7 @@
     <string name="dialog.wakelock">"Permanent PWL"</string>
     <string name="dialog.btscreenlock">"Screen-on when in-call with BT headset/car kit"</string>
     <string name="dialog.tvTransparency">"Background transparency [0-255]"</string>
+    <string name="dialog.tvFontSize">"Font size [5-50]"</string>
     <string name="notify">CPUTableau active...</string> 
     <string name="notify.active">Active...</string> 
 </resources>

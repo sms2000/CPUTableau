@@ -102,7 +102,7 @@ public class TransparentFrame extends RelativeLayout implements View.OnTouchList
 
 		
 		transparentClient.setContentCallback (this);
-
+		
 		widthDisplay  = windowManager.getDefaultDisplay().getWidth();
 		heightDisplay = windowManager.getDefaultDisplay().getHeight();
 		
@@ -247,8 +247,6 @@ public class TransparentFrame extends RelativeLayout implements View.OnTouchList
 	
 				params.width  = widthDisplay; 
 				params.height = heightDisplay; 
-				
-				transparentClient.waitUpdate (WAIT_UPDATE);
 			}
 			
 			setPadding (downPoint.x, 
@@ -256,8 +254,10 @@ public class TransparentFrame extends RelativeLayout implements View.OnTouchList
 						0,
 						0);
 		
-			windowManager.updateViewLayout (this, 
-	   										params);
+			windowManager.updateViewLayout(this, 
+	   							   		   params);
+
+			service.activateNow();
 
 			break;
 
@@ -348,33 +348,25 @@ public class TransparentFrame extends RelativeLayout implements View.OnTouchList
 					params.height = contentSize.y; 
 				}
 
-				setVisibility (View.INVISIBLE);
 				
+				windowManager.removeView (this);
+
 				setPadding (0, 
 					    	0, 
 					    	0, 
 					    	0);
 
 
-				windowManager.updateViewLayout (this, 
-												params);
+				windowManager.addView (this, 
+									   params);
 
-				
-				new Handler().post (new Runnable()
-				{
-					public void run() 
-					{
-						transparentClient.waitUpdate (WAIT_UPDATE);
-						
-						setVisibility (View.VISIBLE);
-					}
-				});
-				
 
 				motionHappen = false;
 
 				service.saveDefaultXY ((float)params.x / widthDisplay, 
-						   			   (float)params.y / heightDisplay); 
+						   			   (float)params.y / heightDisplay);
+				
+				service.activateNow();
 			}
 			
 			break;
@@ -449,8 +441,23 @@ public class TransparentFrame extends RelativeLayout implements View.OnTouchList
 	}
 	
 	
+	public void refresh (boolean full)
+	{
+		transparentClient.refresh (full);
+		service.activateNow();
+	}
+
+
 	public void refresh()
 	{
-		transparentClient.refresh();
+		transparentClient.refresh (false);
+		service.activateNow();
+	}
+
+	
+	public void updateFontSize() 
+	{
+		transparentClient.updateFontSize();
+		loadContentSize();
 	}
 }

@@ -84,7 +84,6 @@ public class TransparentContent extends TransparentBase
 		}
 		
 		canvas.drawColor (BACKGROUND_COLOR | (StateMachine.getTransparency() << 24));
-		
 			
 		overlayPaint[0].getTextBounds (maxString, 
 									   0, 
@@ -222,7 +221,14 @@ public class TransparentContent extends TransparentBase
 		refresh (overlaySizeChanged);
 	}
 
-
+	public void updateFontSize() 
+	{
+		overlayPaint[0].setTextSize (StateMachine.getFontSize());
+				
+		refresh();
+	}
+	
+	
 	public void getContentSize (Point contentSize) 
 	{
 	    overlayPaint[0].getTextBounds (maxString,
@@ -256,7 +262,7 @@ public class TransparentContent extends TransparentBase
 		{
 			transparentContentCallback.contentSizeChanged();
 		}
-		
+
 		super.refresh();
     }
 

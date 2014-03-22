@@ -10,23 +10,26 @@ import android.util.Log;
 
 public class WatchdogThread extends Thread
 {
-	private static final String TAG 		= "WatchdogThread";
+	private static final String TAG 			= "WatchdogThread";
 
-	private static final int 	MAX_STRINGS = 4;
+	private static final int 	MAX_STRINGS 	= 4;
+
+	private static final long 	SHORT_POLLING 	= 100;
+	private static final long 	LONG_POLLING  	= 1000;
 	
 	
-	private boolean				threadRun 	= true;
+	private boolean				threadRun 		= true;
 	private String[]			tempFiles;
 	private String[]			freqFiles;
 	private String				onlineFiles;	
 	private String[] 			chargeFiles;
 	private WatchdogCallback 	watchdogCallback;
 	private Handler				mainHandler;				
-	private long				pollingTime	= 1000;
-	private int					tempIndex	= -1;
-	private int					freqIndex	= -1;
-	private int					onlineCPUs	= -1;
-	private int					chargeIndex	= -1;
+	private long				pollingTime		= LONG_POLLING;
+	private int					tempIndex		= -1;
+	private int					freqIndex		= -1;
+	private int					onlineCPUs		= -1;
+	private int					chargeIndex		= -1;
 	
 	enum DataStatus {None, OK, Error};
 	
@@ -34,6 +37,8 @@ public class WatchdogThread extends Thread
 
 	private String 				oldStrOnline	= "";
 	private int					oldRes[]		= new int[MAX_STRINGS];
+
+	private Integer				inRushCounter	= 0;
 
 	
     private class ErrorTempTask implements Runnable
@@ -95,6 +100,18 @@ public class WatchdogThread extends Thread
 	{
 		threadRun = false;
 
+		interrupt();
+	}
+	
+
+	public void activateNow()
+	{
+		synchronized(inRushCounter)
+		{
+			inRushCounter = 5;
+			pollingTime	  = SHORT_POLLING;
+		}
+		
 		interrupt();
 	}
 	
@@ -293,8 +310,21 @@ public class WatchdogThread extends Thread
 				}
 			}
 
+			
 			try 
 			{
+				synchronized(inRushCounter)
+				{
+					if (inRushCounter > 0)
+					{
+						inRushCounter--;
+					}
+					else
+					{
+						pollingTime = LONG_POLLING;
+					}
+				}
+				
 				sleep (pollingTime);
 			} 
 			catch (InterruptedException e) 
@@ -374,7 +404,7 @@ public class WatchdogThread extends Thread
 
 	private int readFileData (String 	path)
 	{
-		File 			file = new File(path);
+		File file = new File(path);
 
 		try 
 		{

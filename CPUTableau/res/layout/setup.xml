@@ -83,6 +83,21 @@
 		    android:layout_height="wrap_content" 
 		    android:max = "255"/>
 						
+		<TextView 
+		    android:id="@+id/tvFontSize"
+		    android:layout_marginLeft="30dp"
+		    android:layout_marginTop="20dp"
+		    android:layout_marginRight="20dp"
+		    android:layout_width="wrap_content"
+		    android:layout_height="wrap_content"
+		    android:text="@string/dialog.tvFontSize" />
+		
+		<SeekBar
+		    android:id="@+id/sbFontSize"
+		    android:layout_width="match_parent"
+		    android:layout_height="wrap_content" 
+		    android:max = "45"/>
+		
 		<Button
 		    android:id="@+id/btOK"
 		    android:layout_marginTop="20dp"

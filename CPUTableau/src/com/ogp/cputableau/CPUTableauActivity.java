@@ -15,7 +15,9 @@ import android.widget.SeekBar.OnSeekBarChangeListener;
 public class CPUTableauActivity extends Activity
 {
     @SuppressWarnings("unused")
-	private static final String 	TAG 						= "CPUTableauActivity";
+	private static final String 	TAG 				= "CPUTableauActivity";
+
+	private static final int 		MIN_FONT_SIZE 		= 5;
 	
     private CheckBox 				cbEnableOverlay		= null;
     private CheckBox 				cbEnableDebug		= null;
@@ -23,6 +25,7 @@ public class CPUTableauActivity extends Activity
     private CheckBox 				cbEnablePWL 		= null;
     private CheckBox 				cbEnableBTSL 		= null;
     private SeekBar 				sbTransparency		= null;
+    private SeekBar 				sbFontSize			= null;
     
     
     @Override
@@ -37,8 +40,8 @@ public class CPUTableauActivity extends Activity
 
         LayoutInflater li = getLayoutInflater();
         
-        ViewGroup viewGroup = (ViewGroup) li.inflate (R.layout.setup, 
-        								  			  null);
+        ViewGroup viewGroup = (ViewGroup)li.inflate (R.layout.setup, 
+        								  			 null);
         setContentView (viewGroup);
 
         Button btOK = (Button)viewGroup.findViewById(R.id.btOK);
@@ -66,7 +69,7 @@ public class CPUTableauActivity extends Activity
 			{
 				if (fromUser)
 				{	
-					changeTransparency  (progress);
+					changeTransparency (progress);
 				}
 			}
 
@@ -81,12 +84,38 @@ public class CPUTableauActivity extends Activity
 			}
 		});
         
+        sbFontSize = (SeekBar) viewGroup.findViewById (R.id.sbFontSize);
+        sbFontSize.setOnSeekBarChangeListener (new OnSeekBarChangeListener()
+        {
+			public void onProgressChanged (SeekBar 	seekBar, 
+										   int 		progress,
+										   boolean 	fromUser) 
+			{
+				if (fromUser)
+				{	
+					changeFontSize (progress);
+				}
+			}
+
+
+			public void onStartTrackingTouch (SeekBar seekBar) 
+			{
+			}
+
+
+			public void onStopTrackingTouch (SeekBar seekBar) 
+			{
+			}
+		});
+
+        
         cbEnableOverlay.setChecked  (StateMachine.getOverlay());
         cbEnableDebug.  setChecked  (StateMachine.getExtensiveDebug());
         cbEnableNotify. setChecked  (StateMachine.getUseNotify());
         cbEnablePWL. 	setChecked  (StateMachine.getPWL());
         cbEnableBTSL. 	setChecked  (StateMachine.getBTSL());
         sbTransparency. setProgress (StateMachine.getTransparency());
+        sbFontSize. 	setProgress (StateMachine.getFontSize() - MIN_FONT_SIZE);
         
         if (StateMachine.getOverlay())
         {
@@ -103,7 +132,15 @@ public class CPUTableauActivity extends Activity
 	}
 
 
-	protected void saveAndFinish()
+    protected void changeFontSize (int progress) 
+    {
+		StateMachine.setFontSize (sbFontSize.getProgress() + MIN_FONT_SIZE);
+		
+		CPUTableauService.fullUpdate();
+	}
+
+    
+    protected void saveAndFinish()
     {
     	StateMachine.setOverlay 		(cbEnableOverlay.isChecked());
 		StateMachine.setExtensiveDebug 	(cbEnableDebug.isChecked());
@@ -111,6 +148,7 @@ public class CPUTableauActivity extends Activity
 		StateMachine.setPWL	 		  	(cbEnablePWL.isChecked());
 		StateMachine.setBTSL 		  	(cbEnableBTSL.isChecked());
 		StateMachine.setTransparency  	(sbTransparency.getProgress());
+		StateMachine.setFontSize		(sbFontSize.getProgress() + MIN_FONT_SIZE);
 
         StateMachine.writeToPersistantStorage();
 

@@ -13,6 +13,7 @@ public class StateMachine
 	private static final String 			USE_PWL					= "UsePWL";
 	private static final String 			BT_SC_LOCK				= "BTScreenLock";
 	private static final String 			TRANSPARENCY			= "Transparency";
+	private static final String 			FONT_SIZE				= "FontSize";
 	
 	private static Context					appContext;
 	
@@ -24,6 +25,8 @@ public class StateMachine
 
 	private static boolean 					activityRun;
 	private static int 						transparency;
+	private static int 						fontSize;
+
 	private static boolean 					screenOn;
 	private static float 					batteryTemp;
 	
@@ -49,6 +52,7 @@ public class StateMachine
 		usePWL						= false;
 		useBTSL						= false;
 		transparency				= 200;
+		fontSize					= 24;
 		
 		readFromPersistantStorage();
 	}
@@ -65,6 +69,7 @@ public class StateMachine
 		usePWL			= pref.getBoolean 	(USE_PWL, 			usePWL);
 		useBTSL			= pref.getBoolean 	(BT_SC_LOCK,		useBTSL);
 		transparency	= pref.getInt		(TRANSPARENCY, 		transparency);
+		fontSize		= pref.getInt		(FONT_SIZE, 		fontSize);
 	}
 
 	
@@ -81,6 +86,7 @@ public class StateMachine
 		editor.putBoolean	(USE_PWL, 				usePWL);
 		editor.putBoolean	(BT_SC_LOCK, 			useBTSL);
 		editor.putInt		(TRANSPARENCY, 			transparency);
+		editor.putInt		(FONT_SIZE, 			fontSize);
 		
 		editor.commit();
 	}
@@ -105,13 +111,16 @@ public class StateMachine
 	public static int 		getTransparency			() 				{return transparency;}
 	public static void 		setTransparency			(int	 value)	{transparency = value;}
 
+	public static int	 	getFontSize				() 				{return fontSize;}
+	public static void		setFontSize				(int	 value) {fontSize = value;}
+
+
 // Not preserved (local state)	
 	public static void 		setActivityRun			(boolean value) {activityRun = value;}
 	public static boolean	isActivityRun			() 				{return activityRun;}
 
 	public static void 		setScreenOn				(boolean value) {screenOn = value;}
 	public static boolean	getScreenOn				() 				{return screenOn;}
-
 
 	public static void      setBatteryTemp			(float value)	{batteryTemp = value;}
 	public static float     getBatteryTemp			() 				{return batteryTemp;}

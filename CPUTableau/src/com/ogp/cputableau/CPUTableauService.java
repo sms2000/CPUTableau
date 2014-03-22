@@ -370,8 +370,10 @@ public class CPUTableauService extends Service implements WatchdogCallback
 		{
 			if (null == transparentFrame)
 			{
-				transparentFrame = new TransparentFrame(CPUTableauService.this, 
+				transparentFrame = new TransparentFrame(this, 
 												    	new TransparentContent(CPUTableauService.this));
+				
+				transparentFrame.updateFontSize();
 			}
 			
 			if (null == watchdogThread)
@@ -551,11 +553,66 @@ public class CPUTableauService extends Service implements WatchdogCallback
 	}
 
 	
+	public static void fullUpdate() 
+	{
+		try
+		{
+			thisService.transparentFrame.updateFontSize();
+			thisService.transparentFrame.refresh (true);
+			
+			Log.w(TAG, "fullUpdate. Succeeded.");
+		}
+		catch(Exception e)
+		{
+			Log.e(TAG, "fullUpdate. EXC(1)");
+		}
+	}
+
+	
 	protected void setBatteryTemperature (float temperature) 
 	{
 		StateMachine.setBatteryTemp (temperature);
 
 		Log.w(TAG, String.format ("setBatteryTemperature. Succeeded. New battery temperature: %.1f degC.", 
 								  temperature));		
+	}
+
+	
+	public static void updateFontSize()
+	{
+		if (null != thisService)
+		{
+			thisService.updateFontSizeInternal();
+		}
+	}
+	
+	
+	private void updateFontSizeInternal()
+	{
+		try
+		{
+			thisService.transparentFrame.updateFontSize();
+			
+			Log.w(TAG, "updateFontSizeInternal. Succeeded.");
+		}
+		catch(Exception e)
+		{
+			Log.e(TAG, "updateFontSizeInternal. EXC(1)");
+		}
+	}
+
+
+	public void activateNow() 
+	{
+		try
+		{
+			watchdogThread.activateNow();
+
+			Log.w(TAG, "activateNow. Succeeded.");
+		}
+		catch(Exception e)
+		{
+			Log.e(TAG, "activateNow. EXC(1).");
+		}
 	}
 }
