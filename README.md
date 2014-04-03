@@ -3,6 +3,19 @@ CPUTableau
 
 Permanent overlay window presenting the CPU temperature, clock and active cores.
 
+2.0.202
+-------
+
+1. Major redesign. 
+
+2. Motion is smoooooth now (or I hope so...)
+
+3. Fahrenheiht degree scale added.
+
+4. Tap/Double tap motion radius and time delta are adustable now.
+
+
+
 1.8.138
 -------
 
