@@ -1,6 +1,6 @@
 package com.ogp.cputableau;
 
-public interface TransparentContentCallback 
+public interface TransparentContentInterface 
 {
 	public void contentSizeChanged 		();
 }

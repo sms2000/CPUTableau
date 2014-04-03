@@ -7,11 +7,15 @@
     <string name="dialog.enablenotify">Enable the label in the Notification panel</string> 
     <string name="dialog.enabledebug">Extensive debug</string> 
     <string name="dialog.accelValue">Acceleration to wake up</string> 
-    <string name="dialog.OK">"      OK      "</string>
+    <string name="dialog.OK">"OK"</string>
     <string name="dialog.wakelock">"Permanent PWL"</string>
     <string name="dialog.btscreenlock">"Screen-on when in-call with BT headset/car kit"</string>
     <string name="dialog.tvTransparency">"Background transparency [0-255]"</string>
     <string name="dialog.tvFontSize">"Font size [5-50]"</string>
+    <string name="dialog.btFaherenheit">"Use Faherenheit"</string>
+    <string name="dialog.tvrefreshMs">"Refresh period (100-5000 ms)"</string>
+    <string name="dialog.tvclickTimeMs">"Tap timeout (50-300 ms)"</string>
+    <string name="dialog.tvtapRadiusPercent">"Tap radius sensitivity [1 - 10 %]"</string>
     <string name="notify">CPUTableau active...</string> 
     <string name="notify.active">Active...</string> 
 </resources>

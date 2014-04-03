@@ -17,9 +17,10 @@ import android.os.PowerManager.WakeLock;
 import android.telephony.PhoneStateListener;
 import android.telephony.TelephonyManager;
 import android.util.Log;
+import android.view.WindowManager;
 
 
-public class CPUTableauService extends Service implements WatchdogCallback
+public class CPUTableauService extends Service implements ServiceInterface
 {
 	private static final String 	TAG 					= "CPUTableauService";
 
@@ -31,7 +32,6 @@ public class CPUTableauService extends Service implements WatchdogCallback
 	private PhoneStateListener		phoneStateListener		= new MyPhoneStateListener();
     private int						callState				= -1;
 	
-	private WatchdogThread			watchdogThread 			= null;
 	private TransparentFrame	 	transparentFrame;
 
 	private BroadcastReceiver 		batteryInfoReceiver;
@@ -40,26 +40,6 @@ public class CPUTableauService extends Service implements WatchdogCallback
 	private boolean 				isForeground			= false;
 	private WakeLock 				partialWakelock			= null;
 	private WakeLock 				screenWakelock			= null;
-	
-	private static final String[]	tempFiles				= new String[]{
-																			"/sys/devices/system/cpu/cpu0/cpufreq/cpu_temp",
-																			"/sys/devices/system/cpu/cpu0/cpufreq/FakeShmoo_cpu_temp",
-																			"/sys/class/thermal/thermal_zone1/temp",						// HTC Evo 3D
-																			"/sys/class/i2c-adapter/i2c-4/4-004c/temperature",
-																			"/sys/devices/platform/omap/omap_temp_sensor.0/temperature",
-																			"/sys/devices/platform/tegra_tmon/temp1_input",					// Atrix 4G
-																			"/sys/kernel/debug/tegra_thermal/temp_tj",
-																			"/sys/devices/platform/s5p-tmu/temperature",       				// Galaxy S3, Note 2
-																			"/sys/class/thermal/thermal_zone0/temp",
-																			"/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_cur_freq",
-																		   };
-	
-	private static final String[]	freqFiles				= new String[]{"/sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq"};
-
-	private static final String		onlineFiles				= "/sys/devices/system/cpu/cpu%d/online";
-
-	private static final String[]	chargeFiles				= new String[]{"/sys/class/power_supply/battery/current_now"};
-	
 	
 	
 	private class MyPhoneStateListener extends PhoneStateListener
@@ -244,6 +224,7 @@ public class CPUTableauService extends Service implements WatchdogCallback
 	}
 
 
+	@SuppressWarnings("deprecation")
 	private void setItForeground()
 	{
 		if (!isForeground
@@ -371,18 +352,7 @@ public class CPUTableauService extends Service implements WatchdogCallback
 			if (null == transparentFrame)
 			{
 				transparentFrame = new TransparentFrame(this, 
-												    	new TransparentContent(CPUTableauService.this));
-				
-				transparentFrame.updateFontSize();
-			}
-			
-			if (null == watchdogThread)
-			{
-				watchdogThread = new WatchdogThread(tempFiles, 
-													freqFiles,
-													onlineFiles,
-													chargeFiles,
-													this);
+														this);
 			}
 			
 			setItForeground();
@@ -391,104 +361,12 @@ public class CPUTableauService extends Service implements WatchdogCallback
 		{
 			if (null != transparentFrame)
 			{
-				transparentFrame.dismiss();
+				transparentFrame.finalize();
 				transparentFrame = null;
 			}
-			
-    		if (null != watchdogThread)
-    		{
-    			watchdogThread.finalize();
-    			watchdogThread = null;
-    		}
 		}
 	}
 		
-	
-	public void errorTemp() 
-	{
-		try
-		{
-			transparentFrame.errorTemp();
-		}
-		catch(Exception e)
-		{
-		}
-	}
-
-
-	public void setParams (int 		params[], 
-						   String 	online) 
-	{
-		try
-		{
-			transparentFrame.setParams (params, 	
-							      	    online);
-		}
-		catch(Exception e)
-		{
-		}
-	}
-	
-	
-	public float loadDefaultX()
-	{
-		SharedPreferences	sharedPrefs = getSharedPreferences ("Defaults", 
-																0);
-		
-		float X = sharedPrefs.getFloat ("X", 
-									 	0f);
-		
-		if (X <= -PERCENT_LIMIT)
-		{
-			X = -PERCENT_LIMIT;
-		}
-		else if (X > PERCENT_LIMIT)
-		{
-			X = PERCENT_LIMIT;
-		}
-		
-		return X;
-	}
-
-	
-	public float loadDefaultY()
-	{
-		SharedPreferences	sharedPrefs = getSharedPreferences ("Defaults", 
-																0);
-
-		float Y = sharedPrefs.getFloat ("Y", 
-			 							0f);
-
-		if (Y <= -PERCENT_LIMIT)
-		{
-			Y = -PERCENT_LIMIT;
-		}
-		else if (Y > PERCENT_LIMIT)
-		{
-			Y = PERCENT_LIMIT;
-		}
-
-		return Y;
-	}
-	
-	
-	public void saveDefaultXY (float x,
-							   float y)
-	{
-		SharedPreferences	sharedPrefs = getSharedPreferences ("Defaults", 
-																0);
-		
-		Editor editor = sharedPrefs.edit();
-
-		editor.putFloat ("X", 
-						 x);
-
-		editor.putFloat ("Y", 
-				 		 y);
-		
-		editor.commit();
-	}
-
 	
 	public void setNewCallState (int newCallState) 
 	{
@@ -558,7 +436,6 @@ public class CPUTableauService extends Service implements WatchdogCallback
 		try
 		{
 			thisService.transparentFrame.updateFontSize();
-			thisService.transparentFrame.refresh (true);
 			
 			Log.w(TAG, "fullUpdate. Succeeded.");
 		}
@@ -577,42 +454,52 @@ public class CPUTableauService extends Service implements WatchdogCallback
 								  temperature));		
 	}
 
-	
-	public static void updateFontSize()
+
+//
+// Interface abstracts	
+//
+	public WindowManager getWindowManager() 
 	{
-		if (null != thisService)
-		{
-			thisService.updateFontSizeInternal();
-		}
-	}
-	
-	
-	private void updateFontSizeInternal()
-	{
-		try
-		{
-			thisService.transparentFrame.updateFontSize();
-			
-			Log.w(TAG, "updateFontSizeInternal. Succeeded.");
-		}
-		catch(Exception e)
-		{
-			Log.e(TAG, "updateFontSizeInternal. EXC(1)");
-		}
+		return (WindowManager)getSystemService (Service.WINDOW_SERVICE);
 	}
 
 
-	public void activateNow() 
+	public PointF loadDefaultXY() 
 	{
-		try
-		{
-			watchdogThread.activateNow();
+		SharedPreferences	sharedPrefs = getSharedPreferences ("Defaults", 
+																0);
 
-			Log.w(TAG, "activateNow. Succeeded.");
-		}
-		catch(Exception e)
-		{
-			Log.e(TAG, "activateNow. EXC(1).");
-		}
+		float X = sharedPrefs.getFloat ("X", 
+										0f);
+
+		if 		(X <= -PERCENT_LIMIT) X = -PERCENT_LIMIT;
+		else if (X >   PERCENT_LIMIT) X = PERCENT_LIMIT;
+
+		float Y = sharedPrefs.getFloat ("Y", 
+										0f);
+
+		if 		(Y <= -PERCENT_LIMIT) Y = -PERCENT_LIMIT;
+		else if (Y >   PERCENT_LIMIT) Y = PERCENT_LIMIT;
+
+
+		return new PointF(X, 
+						  Y);
+	}
+		
+	public void saveDefaultXY (float x,
+							   float y)
+	{
+		SharedPreferences	sharedPrefs = getSharedPreferences ("Defaults", 
+																0);
+
+		Editor editor = sharedPrefs.edit();
+
+		editor.putFloat ("X", 
+						 x);
+
+		editor.putFloat ("Y", 
+						 y);
+
+		editor.commit();
 	}
 }

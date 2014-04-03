@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?> 
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
       package="com.ogp.cputableau"
-      android:versionCode="138"
-      android:versionName="1.8.138">
+      android:versionCode="202"
+      android:versionName="2.0.202">
       
-    <uses-sdk android:minSdkVersion="8" android:targetSdkVersion="17" />
+    <uses-sdk android:minSdkVersion="9"  android:targetSdkVersion="19" />
     
   	<uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
 	<uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
@@ -14,7 +14,8 @@
   	  	
     <application android:label="@string/app_name" 
         		 android:icon="@drawable/icon" 
-        		 android:allowBackup="true" >
+        		 android:allowBackup="true" 
+        		 android:debuggable="true" >
         		 
     	<activity android:name=".CPUTableauActivity"
                   android:label="@string/app_name"

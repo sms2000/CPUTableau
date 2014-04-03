@@ -26,7 +26,7 @@
 	    		<CheckBox
 		    android:id="@+id/cbEnable"
 		    android:layout_marginLeft="30dp"
-		    android:layout_marginTop="20dp"
+		    android:layout_marginTop="2dp"
 		    android:layout_marginRight="20dp" 
 		    android:layout_width="wrap_content"
 		    android:layout_height="wrap_content"
@@ -35,7 +35,7 @@
 		<CheckBox
 		    android:id="@+id/cbNotify"
 		    android:layout_marginLeft="30dp"
-		    android:layout_marginTop="20dp"
+		    android:layout_marginTop="2dp"
 		    android:layout_marginRight="20dp"
 		    android:layout_width="wrap_content"
 		    android:layout_height="wrap_content"
@@ -44,7 +44,7 @@
 		<CheckBox
 		    android:id="@+id/cbDebug"
 		    android:layout_marginLeft="30dp"
-		    android:layout_marginTop="20dp"
+		    android:layout_marginTop="2dp"
 		    android:layout_marginRight="20dp"
 		    android:layout_width="wrap_content"
 		    android:layout_height="wrap_content"
@@ -53,7 +53,7 @@
 		<CheckBox
 		    android:id="@+id/cbWakelock"
 		    android:layout_marginLeft="30dp"
-		    android:layout_marginTop="20dp"
+		    android:layout_marginTop="2dp"
 		    android:layout_marginRight="20dp"
 		    android:layout_width="wrap_content"
 		    android:layout_height="wrap_content"
@@ -62,7 +62,7 @@
 		<CheckBox
 		    android:id="@+id/cbBTScreenLock"
 		    android:layout_marginLeft="30dp"
-		    android:layout_marginTop="20dp"
+		    android:layout_marginTop="2dp"
 		    android:layout_marginRight="20dp"
 		    android:layout_width="wrap_content"
 		    android:layout_height="wrap_content"
@@ -71,7 +71,7 @@
 		<TextView 
 		    android:id="@+id/tvTransparency"
 		    android:layout_marginLeft="30dp"
-		    android:layout_marginTop="20dp"
+		    android:layout_marginTop="2dp"
 		    android:layout_marginRight="20dp"
 		    android:layout_width="wrap_content"
 		    android:layout_height="wrap_content"
@@ -81,13 +81,15 @@
 		    android:id="@+id/sbTransparecy"
 		    android:layout_width="match_parent"
 		    android:layout_height="wrap_content" 
+		    android:layout_marginLeft="10dp"
+		    android:layout_marginRight="10dp"
 		    android:max = "255"/>
 						
 		<TextView 
 		    android:id="@+id/tvFontSize"
 		    android:layout_marginLeft="30dp"
-		    android:layout_marginTop="20dp"
-		    android:layout_marginRight="20dp"
+		    android:layout_marginTop="2dp"
+		    android:layout_marginRight="10dp"
 		    android:layout_width="wrap_content"
 		    android:layout_height="wrap_content"
 		    android:text="@string/dialog.tvFontSize" />
@@ -96,7 +98,65 @@
 		    android:id="@+id/sbFontSize"
 		    android:layout_width="match_parent"
 		    android:layout_height="wrap_content" 
-		    android:max = "45"/>
+		    android:layout_marginLeft="10dp"
+		    android:layout_marginRight="10dp"/>
+		
+		<CheckBox
+		    android:id="@+id/cbFaherenheit"
+		    android:layout_marginLeft="30dp"
+		    android:layout_marginTop="2dp"
+		    android:layout_marginRight="20dp"
+		    android:layout_width="wrap_content"
+		    android:layout_height="wrap_content"
+		    android:text="@string/dialog.btFaherenheit" />
+		
+		<TextView 
+		    android:id="@+id/tvrefreshMs"
+		    android:layout_marginLeft="30dp"
+		    android:layout_marginTop="2dp"
+		    android:layout_marginRight="10dp"
+		    android:layout_width="wrap_content"
+		    android:layout_height="wrap_content"
+		    android:text="@string/dialog.tvrefreshMs" />
+		
+		<SeekBar
+		    android:id="@+id/sbrefreshMs"
+		    android:layout_width="match_parent"
+		    android:layout_height="wrap_content" 
+		    android:layout_marginLeft="10dp"
+		    android:layout_marginRight="10dp"/>
+		
+		<TextView 
+		    android:id="@+id/tvclickTimeMs"
+		    android:layout_marginLeft="30dp"
+		    android:layout_marginTop="2dp"
+		    android:layout_marginRight="10dp"
+		    android:layout_width="wrap_content"
+		    android:layout_height="wrap_content"
+		    android:text="@string/dialog.tvclickTimeMs" />
+		
+		<SeekBar
+		    android:id="@+id/sbclickTimeMs"
+		    android:layout_width="match_parent"
+		    android:layout_height="wrap_content" 
+		    android:layout_marginLeft="10dp"
+		    android:layout_marginRight="10dp"/>
+		
+		<TextView 
+		    android:id="@+id/tvtapRadiusPercent"
+		    android:layout_marginLeft="30dp"
+		    android:layout_marginTop="2dp"
+		    android:layout_marginRight="10dp"
+		    android:layout_width="wrap_content"
+		    android:layout_height="wrap_content"
+		    android:text="@string/dialog.tvtapRadiusPercent" />
+		
+		<SeekBar
+		    android:id="@+id/sbtapRadiusPercent"
+		    android:layout_width="match_parent"
+		    android:layout_height="wrap_content" 
+		    android:layout_marginLeft="10dp"
+		    android:layout_marginRight="10dp"/>
 		
 		<Button
 		    android:id="@+id/btOK"
@@ -105,6 +165,8 @@
 		    android:layout_width="wrap_content"
 		    android:layout_gravity="center"
 		    android:layout_height="wrap_content"
+		    android:gravity="center"
+		    android:minWidth="80dp"		    
 		    android:text="@string/dialog.OK" />
 	 
 	</LinearLayout>

@@ -5,41 +5,42 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.PixelFormat;
 import android.graphics.Point;
+import android.graphics.Rect;
 import android.os.Handler;
 import android.util.Log;
 import android.view.MotionEvent;
+import android.view.TouchDelegate;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.RelativeLayout;
 
 
 @SuppressLint("ViewConstructor")
-public class TransparentFrame extends RelativeLayout implements View.OnTouchListener, TransparentContentCallback
+public class TransparentFrame extends RelativeLayout implements View.OnTouchListener, TransparentContentInterface
 {
-	private static final String 	TAG					= "TransparentFrame";
-
-	private static final long 		CLICK_TIME 			= 300;
-	private static final long 		WAIT_UPDATE 		= 200;
-	private static final int 		MOTION_RADIUS 		= 3;
+	private static final String 		TAG					= "TransparentFrame";
 
 
-	private TransparentContent		transparentClient;
-	private	Point					coords				= new Point();
-	private	boolean					motionHappen		= false;
+	private TransparentContent			transparentClient;
+	private	Point						coords				= new Point();
+	private	boolean						motionHappen		= false;
 
-	private Object					lock				= new Object();
-	private CPUTableauService		service;
-	private WindowManager  			windowManager		= null;
-	private WindowManager.LayoutParams	layoutParams	= null;
-	private LayoutParams			frameParams			= null;
-	private int						widthDisplay;
-	private int						heightDisplay;
-	private Point					contentSize			= new Point();
-	private Point					contentHalfSize		= new Point();
-	private Point  					downPoint			= new Point();
-	private long 					downTime			= 0;
-	private long 					lastClickTime		= 0;
-	private Handler					handler				= new Handler();
+	private Object						lock				= new Object();
+	private ServiceInterface			service;
+	private Context 					context;
+	private WindowManager  				windowManager		= null;
+	private WindowManager.LayoutParams	layoutParams		= null;
+	private LayoutParams				frameParams			= null;
+	private Point						displaySize			= new Point();
+	private Point						displayHalfSize		= new Point();
+	private int							lesserDisplay;
+	private Point  						downPoint			= new Point();
+	private Point  						moveBegin			= new Point();
+	private Point 						oldContentHalfSize 	= null;
+	private long 						downTime			= 0;
+	private long 						lastClickTime		= 0;
+	private Handler						handler				= new Handler();
+	private TouchDelegate 				touchDelegade		= null;
 
 
 	private class VerifySingleClick implements Runnable
@@ -91,84 +92,36 @@ public class TransparentFrame extends RelativeLayout implements View.OnTouchList
 	}
 	
 
-	public TransparentFrame(CPUTableauService 		 	service,
-							TransparentContent			transparentClient)
+	@SuppressWarnings("deprecation")
+	public TransparentFrame(Context						context,
+							ServiceInterface 		 	service)
 	{
-		super(service);
+		super(context);
 
+		this.context				= context;
 		this.service				= service;
-		this.transparentClient		= transparentClient;
-		this.windowManager			= (WindowManager)service.getSystemService (Context.WINDOW_SERVICE);
+		this.windowManager			= service.getWindowManager();
 
+		transparentClient = new TransparentContent(context, 		
+												   this);
 		
-		transparentClient.setContentCallback (this);
+		displaySize.x = windowManager.getDefaultDisplay().getWidth();
+		displaySize.y = windowManager.getDefaultDisplay().getHeight();
 		
-		widthDisplay  = windowManager.getDefaultDisplay().getWidth();
-		heightDisplay = windowManager.getDefaultDisplay().getHeight();
+		displayHalfSize.x = displaySize.x >> 1; 
+		displayHalfSize.y = displaySize.y >> 1; 
 		
 		setOnTouchListener (this);
 		
-		loadContentSize();
 		setContentWindow();
+		updateFontSize();
 	}
 	
 	
-	private void loadContentSize()
-	{
-		transparentClient.getContentSize (contentSize);		
-		
-		contentHalfSize.x = contentSize.x / 2;
-		contentHalfSize.y = contentSize.y / 2;
-	}
-	
-	
-	private void setContentWindow()
-	{
-		float X = service.loadDefaultX();
-		float Y = service.loadDefaultY();
-		
-		layoutParams = new WindowManager.LayoutParams(contentSize.x,
-							   						  contentSize.y,
-							   						  (int)(X * widthDisplay),
-							   						  (int)(Y * heightDisplay),
-							   						  WindowManager.LayoutParams.TYPE_SYSTEM_ERROR,
-				                					  WindowManager.LayoutParams.FLAG_FULLSCREEN 		|
-			                					  	  WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS	|
-			                					  	  WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN 	|
-				                					  WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
-				                					  PixelFormat.TRANSLUCENT);
-
-		windowManager.addView (this,
-							   layoutParams);
-		
-		frameParams = new RelativeLayout.LayoutParams (contentSize.x,
-						 					           contentSize.y);
-
-		addView (transparentClient, 
-			     frameParams);
-		
-		reposition();
-	}
-	
-	
-	private void adjustContentWindow()
-	{
-		windowManager.removeView (this);
-		
-		frameParams.width  = layoutParams.width  = contentSize.x;
-		frameParams.height = layoutParams.height = contentSize.y;
-		
-		windowManager.addView (this,
-				   			   layoutParams);
-
-		transparentClient.setLayoutParams (frameParams);
-	}
-	
-	
-	public void dismiss()
+	public void finalize()
 	{
 		removeView (transparentClient);
-		transparentClient.stop();
+		transparentClient.finalize();
 		transparentClient = null;
 		
 		try
@@ -181,7 +134,40 @@ public class TransparentFrame extends RelativeLayout implements View.OnTouchList
 		}
 	}
 
+	
+	private void setContentWindow()
+	{
+		Log.v(TAG, "setContentWindow. Entry...");
 
+		PointF xyPoint = service.loadDefaultXY();
+
+		layoutParams = new WindowManager.LayoutParams(2,
+							   						  2,
+							   						  (int)(xyPoint.X * displaySize.x) + 1,
+							   						  (int)(xyPoint.Y * displaySize.y) + 1,
+							   						  WindowManager.LayoutParams.TYPE_SYSTEM_ERROR,
+				                					  WindowManager.LayoutParams.FLAG_FULLSCREEN 		|
+			                					  	  WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS	|
+			                					  	  WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN 	|
+				                					  WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
+				                					  PixelFormat.TRANSLUCENT);
+
+		windowManager.addView (this,
+							   layoutParams);
+		
+		frameParams = new RelativeLayout.LayoutParams (RelativeLayout.LayoutParams.MATCH_PARENT,
+													   RelativeLayout.LayoutParams.MATCH_PARENT);
+
+		addView (transparentClient, 
+			     frameParams);
+		
+		reposition();
+
+		Log.v(TAG, "setContentWindow. ... Exit.");
+	}
+	
+
+	@SuppressWarnings("deprecation")
 	@Override
 	public void onLayout (boolean	changed, 
 						  int 		l, 
@@ -195,11 +181,15 @@ public class TransparentFrame extends RelativeLayout implements View.OnTouchList
 						r, 
 						b);
 		
-		if (windowManager.getDefaultDisplay().getWidth() != widthDisplay)
+		if (windowManager.getDefaultDisplay().getWidth() != displaySize.x)
 		{
-			widthDisplay  = windowManager.getDefaultDisplay().getWidth();
-			heightDisplay = windowManager.getDefaultDisplay().getHeight();
+			displaySize.x = windowManager.getDefaultDisplay().getWidth();
+			displaySize.y = windowManager.getDefaultDisplay().getHeight();
+			displayHalfSize.x = displaySize.x >> 1;
+			displayHalfSize.y = displaySize.y >> 1;
 
+			lesserDisplay = displaySize.x < displaySize.y ? displaySize.x : displaySize.y; 
+			
 			reposition();
 		}
 
@@ -209,8 +199,8 @@ public class TransparentFrame extends RelativeLayout implements View.OnTouchList
 	public boolean onTouch (View 		v, 
 							MotionEvent event) 
 	{
-		WindowManager.LayoutParams params;
-		
+		WindowManager.LayoutParams layoutParams;
+
 		if (StateMachine.getExtensiveDebug())
 		{
 			Log.v(TAG, String.format ("onTouch. A: %d  X/Y:%d/%d",
@@ -219,59 +209,85 @@ public class TransparentFrame extends RelativeLayout implements View.OnTouchList
 									  (int)event.getY()));
 		}
 		
-		int location[] = new int[2];
-		
-		location[0] = (int)event.getX();
-		location[1] = (int)event.getY();
-
-		int X = location[0] - coords.x;
-		int Y = location[1] - coords.y; 
+		int locationX = (int)event.getRawX() - displayHalfSize.x; 
+		int locationY = (int)event.getRawY() - displayHalfSize.y;
 		
 		
 		switch (event.getAction())
 		{
 		case MotionEvent.ACTION_DOWN:
-			downTime 		= System.currentTimeMillis();
-			params 			= (WindowManager.LayoutParams)getLayoutParams();
-			coords.x	 	= location[0];
-			coords.y 		= location[1];
 			motionHappen 	= false;
+			downTime		= System.currentTimeMillis();
+
+			layoutParams = (WindowManager.LayoutParams)getLayoutParams();
+
+			moveBegin.x = layoutParams.x; 
+			moveBegin.y = layoutParams.y; 
+			
+			coords.x = locationX;
+			coords.y = locationY;
 
 			synchronized(lock)
 			{
-				downPoint.x = params.x + (widthDisplay  - contentSize.x) / 2;
-				downPoint.y = params.y + (heightDisplay - contentSize.y) / 2;
-				
-				params.x = 0; 
-				params.y = 0; 
-	
-				params.width  = widthDisplay; 
-				params.height = heightDisplay; 
+				downPoint.x = locationX;
+				downPoint.y = locationY;
 			}
+
 			
-			setPadding (downPoint.x, 
-						downPoint.y, 
-						0,
-						0);
-		
-			windowManager.updateViewLayout(this, 
-	   							   		   params);
-
-			service.activateNow();
-
+			Rect bounds = new Rect(0, 
+								   0, 
+								   displaySize.x,
+								   displaySize.y);
+			
+			touchDelegade = new TouchDelegate(bounds, 
+											  this);
+			
+			setTouchDelegate (touchDelegade);
 			break;
+			
+			
+		case MotionEvent.ACTION_MOVE:
+			int X = locationX;
+			int Y = locationY;
+			
+			int tapRadius = lesserDisplay * StateMachine.getTapRadiusPercent() / 100;
+			
+			motionHappen = Math.abs(X - downPoint.x) > tapRadius  
+						   ||
+						   Math.abs(Y - downPoint.y) > tapRadius;
+		    
+						   
+			layoutParams = (WindowManager.LayoutParams)getLayoutParams();
+				
+			X += moveBegin.x - coords.x;
+			Y += moveBegin.y - coords.y;
 
+			if      (X < -displayHalfSize.x) X = -displayHalfSize.x;
+			else if (X >  displayHalfSize.x) X =  displayHalfSize.x;
+			
+			if      (Y < -displayHalfSize.y) Y = -displayHalfSize.y;
+			else if (Y >  displayHalfSize.y) Y =  displayHalfSize.y;
+		
+			layoutParams.x = X;
+			layoutParams.y = Y;
+
+			windowManager.updateViewLayout(this, 
+										   layoutParams);
+			
+			
+			break;
+			
 			
 		case MotionEvent.ACTION_UP:
 		case MotionEvent.ACTION_CANCEL:
 			if (!StateMachine.isActivityRun())
 			{
 				long timeNow = System.currentTimeMillis();
-				if (timeNow - downTime < CLICK_TIME)
+				if (timeNow - downTime < StateMachine.getClickTimeMs())
 				{
-					if (timeNow - lastClickTime < CLICK_TIME)
+					if (timeNow - lastClickTime < StateMachine.getClickTimeMs())
 					{
-						Log.d(TAG, "onTouch. Double click encountered. Do whatever...");
+						Log.d(TAG, "onTouch. Double click encountered. Do whatever... Here: open activity.");
 
 						lastClickTime 	= 0;
 						motionHappen 	= false;
@@ -285,96 +301,28 @@ public class TransparentFrame extends RelativeLayout implements View.OnTouchList
 						lastClickTime = timeNow;
 
 						new Handler().postDelayed (new VerifySingleClick(),
-												   CLICK_TIME);
+												   StateMachine.getClickTimeMs());
 					}
 				}
 			}
-			
-			
-		case MotionEvent.ACTION_MOVE:
-			motionHappen = Math.abs(X - downPoint.x) > MOTION_RADIUS
-						   ||
-						   Math.abs(Y - downPoint.y) > MOTION_RADIUS;
-			
-			
-			
-			if (X < -contentHalfSize.x)
-			{
-				X = -contentHalfSize.x;
-			}
-			else if (X > widthDisplay - contentHalfSize.x)
-			{
-				X = widthDisplay - contentHalfSize.x;
-			}
-			
-			if (Y < -contentHalfSize.y)
-			{
-				Y = -contentHalfSize.y;
-			}
-			else if (Y > heightDisplay - contentHalfSize.y)
-			{
-				Y = heightDisplay - contentHalfSize.y;
-			}
 
 			
-			synchronized(lock)
-			{
-				downPoint.x = X;
-				downPoint.y = Y;
-			}
+			setTouchDelegate (null);
+			touchDelegade = null;
 
+			motionHappen = false;
 
-			if (MotionEvent.ACTION_MOVE == event.getAction())
-			{
-				setPadding (downPoint.x, 
-							downPoint.y, 
-							0, 
-							0);
-				
-				refresh();
-			}
-			else
-			{
-				Log.d(TAG, "onTouch. Released. Moving finished.");
-
-				params = (WindowManager.LayoutParams)getLayoutParams();
-
-				synchronized(lock)
-				{
-					params.x = X -  widthDisplay / 2 + contentHalfSize.x;
-					params.y = Y - heightDisplay / 2 + contentHalfSize.y;
-						
-					params.width  = contentSize.x; 
-					params.height = contentSize.y; 
-				}
-
-				
-				windowManager.removeView (this);
-
-				setPadding (0, 
-					    	0, 
-					    	0, 
-					    	0);
-
-
-				windowManager.addView (this, 
-									   params);
-
-
-				motionHappen = false;
-
-				service.saveDefaultXY ((float)params.x / widthDisplay, 
-						   			   (float)params.y / heightDisplay);
-				
-				service.activateNow();
-			}
+			layoutParams = (WindowManager.LayoutParams)getLayoutParams();
 			
+			service.saveDefaultXY ((float)layoutParams.x / displaySize.x, 
+					   			   (float)layoutParams.y / displaySize.y);
 			break;
+			
 		}
 		
 		return true;
 	}
-
+	
 
 	private void verifySingleClick()
 	{
@@ -384,7 +332,7 @@ public class TransparentFrame extends RelativeLayout implements View.OnTouchList
 		{
 			lastClickTime = 0;
 			
-			Log.d(TAG, "Single click encountered. Do whatever...");			
+			Log.d(TAG, "verifySingleClick. Single click encountered. Do whatever... Here: do nothing.");			
 //
 //  TODO: use single click if required...
 //			
@@ -395,34 +343,22 @@ public class TransparentFrame extends RelativeLayout implements View.OnTouchList
 	
 	private void initiateActivity()
 	{
-		Intent intent = new Intent(service,
+		Intent intent = new Intent(context,
 								   CPUTableauActivity.class);
 		
 		intent.addFlags (Intent.FLAG_ACTIVITY_NEW_TASK);
-		service.startActivity (intent);	
+		context.startActivity (intent);	
 	}
 
 
-	public void errorTemp() 
-	{
-		transparentClient.setErrorParameters();
-	}
-
-
-	public void setParams (int[] 	params, 
-						   String 	online) 
-	{
-		transparentClient.updateParameters (params, 
-								   			online);
-	}
-
-	
 	private void reposition() 
 	{
 		WindowManager.LayoutParams params = (WindowManager.LayoutParams)getLayoutParams(); 
 
-		params.x = (int)(service.loadDefaultX() * widthDisplay);
-		params.y = (int)(service.loadDefaultY() * heightDisplay);
+		PointF xyPoint = service.loadDefaultXY();
+		
+		params.x = (int)(xyPoint.X * displaySize.x);
+		params.y = (int)(xyPoint.Y * displaySize.y);
 		
 		handler.post (new ActivateMove(params, 
 									   0, 
@@ -432,32 +368,55 @@ public class TransparentFrame extends RelativeLayout implements View.OnTouchList
 
 	public void contentSizeChanged() 
 	{
-		Log.d(TAG, "TransparentFrame size changed.");
+		Log.d(TAG, "contentSizeChanged. TransparentFrame size changed.");
 
-		loadContentSize();
-		adjustContentWindow();
+		int xPos = layoutParams.x; 
+		int yPos = layoutParams.y; 
+
+		Point contentSize = transparentClient.getContentSize();
+
+		int xHalf = contentSize.x >> 1;
+		int yHalf = contentSize.y >> 1;
 		
-		refresh();
+		if (null == oldContentHalfSize)
+		{
+			oldContentHalfSize = new Point (xHalf, 
+											yHalf);
+		}
+
+		xPos = layoutParams.x - oldContentHalfSize.x; 
+		yPos = layoutParams.y - oldContentHalfSize.y;
+			
+		
+		layoutParams.width  = contentSize.x;
+		layoutParams.height = contentSize.y;
+			
+		layoutParams.x = xPos + xHalf;
+		layoutParams.y = yPos + yHalf;
+			
+		oldContentHalfSize.x = xHalf;
+		oldContentHalfSize.y = yHalf;
+			
+		windowManager.updateViewLayout (this,
+				   			   			layoutParams);
+
+		transparentClient.refresh();
+		
+		Log.w(TAG, "adjustContentWindow. Adjusted.");
+		Log.v(TAG, "adjustContentWindow. ... Exit.");
 	}
 	
 	
-	public void refresh (boolean full)
-	{
-		transparentClient.refresh (full);
-		service.activateNow();
-	}
-
-
 	public void refresh()
 	{
-		transparentClient.refresh (false);
-		service.activateNow();
+		transparentClient.refresh();
 	}
 
 	
 	public void updateFontSize() 
 	{
 		transparentClient.updateFontSize();
-		loadContentSize();
+		
+		contentSizeChanged();
 	}
 }

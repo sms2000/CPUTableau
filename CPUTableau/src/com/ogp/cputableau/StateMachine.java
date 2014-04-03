@@ -4,7 +4,7 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 
-public class StateMachine 
+public class StateMachine
 {
 	private static final String 			PERSISTANT_STORAGE 		= "T2TB";
 	private static final String 			USE_OVERLAY 			= "UseOverlay";
@@ -14,6 +14,10 @@ public class StateMachine
 	private static final String 			BT_SC_LOCK				= "BTScreenLock";
 	private static final String 			TRANSPARENCY			= "Transparency";
 	private static final String 			FONT_SIZE				= "FontSize";
+	private static final String 			TEMP_SCALE				= "TempScale";
+	private static final String 			REFRESH_MS				= "RefreshMs";
+	private static final String 			CLICK_TIME_MS			= "ClickTimeMs";
+	private static final String 			TAP_RADIUS_PERCENT		= "TapRadiusPercent";
 	
 	private static Context					appContext;
 	
@@ -26,7 +30,12 @@ public class StateMachine
 	private static boolean 					activityRun;
 	private static int 						transparency;
 	private static int 						fontSize;
+	private static boolean 					useFaherenheit;
+	private static int 						refreshMs;
+	private static int 						clickTimeMs;
+	private static int 						tapRadiusPercent;
 
+	
 	private static boolean 					screenOn;
 	private static float 					batteryTemp;
 	
@@ -44,13 +53,18 @@ public class StateMachine
 		activityRun					= false;
 		screenOn					= true;
 		batteryTemp					= -1.0f;
-		
+				
 // Defaults
 		useOverlay					= true;
 		extensiveDebug				= false;
 		useNotify					= false;
 		usePWL						= false;
 		useBTSL						= false;
+		useFaherenheit				= false;
+		refreshMs					= 250;
+		clickTimeMs					= 250;
+		tapRadiusPercent			= 5;
+		
 		transparency				= 200;
 		fontSize					= 24;
 		
@@ -63,13 +77,17 @@ public class StateMachine
 		SharedPreferences pref = appContext.getSharedPreferences (PERSISTANT_STORAGE, 
 				  												  Context.MODE_PRIVATE);
 		
-		useOverlay		= pref.getBoolean 	(USE_OVERLAY, 		useOverlay);
-		extensiveDebug 	= pref.getBoolean 	(EXTENSIVE_DEBUG, 	extensiveDebug);
-		useNotify	 	= pref.getBoolean 	(USE_NOTIFY, 		useNotify);
-		usePWL			= pref.getBoolean 	(USE_PWL, 			usePWL);
-		useBTSL			= pref.getBoolean 	(BT_SC_LOCK,		useBTSL);
-		transparency	= pref.getInt		(TRANSPARENCY, 		transparency);
-		fontSize		= pref.getInt		(FONT_SIZE, 		fontSize);
+		useOverlay			= pref.getBoolean 	(USE_OVERLAY, 			useOverlay);
+		extensiveDebug 		= pref.getBoolean 	(EXTENSIVE_DEBUG, 		extensiveDebug);
+		useNotify	 		= pref.getBoolean 	(USE_NOTIFY, 			useNotify);
+		usePWL				= pref.getBoolean 	(USE_PWL, 				usePWL);
+		useBTSL				= pref.getBoolean 	(BT_SC_LOCK,			useBTSL);
+		transparency		= pref.getInt		(TRANSPARENCY, 			transparency);
+		fontSize			= pref.getInt		(FONT_SIZE, 			fontSize);
+		useFaherenheit		= pref.getBoolean 	(TEMP_SCALE,			useFaherenheit);
+		refreshMs			= pref.getInt		(REFRESH_MS, 			refreshMs);
+		clickTimeMs			= pref.getInt		(CLICK_TIME_MS, 		clickTimeMs);
+		tapRadiusPercent	= pref.getInt		(TAP_RADIUS_PERCENT,	tapRadiusPercent);
 	}
 
 	
@@ -87,7 +105,11 @@ public class StateMachine
 		editor.putBoolean	(BT_SC_LOCK, 			useBTSL);
 		editor.putInt		(TRANSPARENCY, 			transparency);
 		editor.putInt		(FONT_SIZE, 			fontSize);
-		
+		editor.putBoolean	(TEMP_SCALE, 			useFaherenheit);
+		editor.putInt		(REFRESH_MS, 			refreshMs);
+		editor.putInt		(CLICK_TIME_MS, 		clickTimeMs);
+		editor.putInt		(TAP_RADIUS_PERCENT, 	tapRadiusPercent);
+			
 		editor.commit();
 	}
 
@@ -114,7 +136,18 @@ public class StateMachine
 	public static int	 	getFontSize				() 				{return fontSize;}
 	public static void		setFontSize				(int	 value) {fontSize = value;}
 
+	public static boolean 	isFahrenheit			() 				{return useFaherenheit;}
+	public static void		setFahrenheit			(boolean value)	{useFaherenheit = value;}
 
+	public static int	 	getRefreshMs			() 				{return refreshMs;}
+	public static void		setRefreshMs			(int	 value) {refreshMs = value;}
+
+	public static int	 	getClickTimeMs			() 				{return clickTimeMs;}
+	public static void		setClickTimeMs			(int	 value) {clickTimeMs = value;}
+
+	public static int	 	getTapRadiusPercent		() 				{return tapRadiusPercent;}
+	public static void		setTapRadiusPercent		(int	 value) {tapRadiusPercent = value;}
+	
 // Not preserved (local state)	
 	public static void 		setActivityRun			(boolean value) {activityRun = value;}
 	public static boolean	isActivityRun			() 				{return activityRun;}

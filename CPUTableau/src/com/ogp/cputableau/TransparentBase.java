@@ -1,8 +1,12 @@
 package com.ogp.cputableau;
 
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.PixelFormat;
+import android.util.Log;
 import android.view.Surface;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
@@ -10,13 +14,15 @@ import android.view.SurfaceView;
 
 public abstract class TransparentBase extends SurfaceView
 {
-	private static final int 	THREAD_OPERATIVE 	= 10000;
+	private static final String TAG 				= "TransparentBase";
 
-	private Object				forceRedraw			= new Object();
+	protected static final long MIN_WAIT 			= 100;	// 100ms
+	
 	private SurfaceHolder 		surfaceHolder;
 	private Thread				thread				= null;
 	private boolean				running				= false;
-	private long				waitTill			= 0;
+	private int					forceInflicted		= 0;
+	private CountDownLatch 		lock				= null;
 	
 	
 	public TransparentBase(Context context)
@@ -27,7 +33,13 @@ public abstract class TransparentBase extends SurfaceView
 	}
 
 	
-	public void start()
+	public void finalize() 
+	{
+		stop();
+	}
+
+	
+	protected void start()
 	{
 		if (null != thread)
 		{
@@ -43,18 +55,6 @@ public abstract class TransparentBase extends SurfaceView
 			{
 				while (running)
 				{
-					synchronized(forceRedraw)
-					{
-						try
-						{
-							forceRedraw.wait (THREAD_OPERATIVE);
-					    } 
-						catch(InterruptedException e)
-						{
-					    }
-					} 
-
-					
 					if (null == surfaceHolder)
 					{
 						surfaceHolder = getHolder();
@@ -74,7 +74,8 @@ public abstract class TransparentBase extends SurfaceView
 						Canvas canvas = surfaceHolder.lockCanvas();
 						if (null != canvas)
 						{
-							drawPanelImage (canvas);
+							drawPanelImage (canvas, 
+											forceInflicted > 0);
 
 							surfaceHolder.unlockCanvasAndPost (canvas);
 						}
@@ -87,10 +88,32 @@ public abstract class TransparentBase extends SurfaceView
 					{
 						break;
 					}
+
+					
+					try
+					{
+						if (0 < forceInflicted)
+						{
+							forceInflicted--;
+							lock = new CountDownLatch(1);
+							lock.await (MIN_WAIT, 
+										TimeUnit.MILLISECONDS);
+							
+						}
+						else
+						{
+							lock.await (StateMachine.getRefreshMs(), 
+										TimeUnit.MILLISECONDS);
+						}
+				    } 
+					catch(Exception e)
+					{
+						Log.e(TAG, "run. EXC(1)");
+					} 
 				}
 			}
-			
 		};
+		
 		
 		thread.setPriority (Thread.NORM_PRIORITY + 2);
 		thread.setName ("SurfaceView");
@@ -98,7 +121,7 @@ public abstract class TransparentBase extends SurfaceView
 	}
     
     
-	public void stop()
+	protected void stop()
 	{
 		if (null == thread)
 		{
@@ -127,24 +150,21 @@ public abstract class TransparentBase extends SurfaceView
 
 	public void refresh()
     {
-    	synchronized(forceRedraw)
-    	{
-    		forceRedraw.notify();
-    	}
+		try
+		{
+			forceInflicted += 3;		// Next 3 iteration done in fast
+			
+			lock.countDown();
+			
+			Log.w(TAG, "refresh. Applyed.");
+		}
+		catch(Exception e)
+		{
+			Log.e(TAG, "refresh. EXC(1)");
+		}
     }
    
 	
-	public void waitUpdate (long ms)
-	{
-		waitTill = System.currentTimeMillis() + ms; 
-	}
-
-	
-	public boolean waitNoUpdate()
-	{
-		return System.currentTimeMillis() < waitTill; 
-	}
-	
-	
-	abstract protected void drawPanelImage (Canvas canvas); 
+	abstract protected void drawPanelImage (Canvas 		canvas,
+			   								boolean 	unconditional); 
 }
