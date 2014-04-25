@@ -37,7 +37,7 @@ public class TransparentFrame extends RelativeLayout implements View.OnTouchList
 	private Point  						downPoint			= new Point();
 	private Point  						moveBegin			= new Point();
 	private Point 						oldContentHalfSize 	= null;
-	private long 						downTime			= 0;
+	private long 						downTime			= -1;
 	private long 						lastClickTime		= 0;
 	private Handler						handler				= new Handler();
 	private TouchDelegate 				touchDelegade		= null;
@@ -48,6 +48,15 @@ public class TransparentFrame extends RelativeLayout implements View.OnTouchList
 		public void run() 
 		{
 			verifySingleClick();			
+		}
+	}
+	
+
+	private class VerifyLongPress implements Runnable
+	{
+		public void run() 
+		{
+			verifyLongPress();			
 		}
 	}
 	
@@ -83,7 +92,7 @@ public class TransparentFrame extends RelativeLayout implements View.OnTouchList
 		}
 	}
 	
-	private class InitiateActivity implements Runnable
+	private class InitiateClick implements Runnable
 	{
 		public void run() 
 		{
@@ -92,7 +101,6 @@ public class TransparentFrame extends RelativeLayout implements View.OnTouchList
 	}
 	
 
-	@SuppressWarnings("deprecation")
 	public TransparentFrame(Context						context,
 							ServiceInterface 		 	service)
 	{
@@ -107,7 +115,8 @@ public class TransparentFrame extends RelativeLayout implements View.OnTouchList
 		
 		displaySize.x = windowManager.getDefaultDisplay().getWidth();
 		displaySize.y = windowManager.getDefaultDisplay().getHeight();
-		
+		lesserDisplay = displaySize.x < displaySize.y ? displaySize.x : displaySize.y; 
+
 		displayHalfSize.x = displaySize.x >> 1; 
 		displayHalfSize.y = displaySize.y >> 1; 
 		
@@ -167,7 +176,6 @@ public class TransparentFrame extends RelativeLayout implements View.OnTouchList
 	}
 	
 
-	@SuppressWarnings("deprecation")
 	@Override
 	public void onLayout (boolean	changed, 
 						  int 		l, 
@@ -243,6 +251,10 @@ public class TransparentFrame extends RelativeLayout implements View.OnTouchList
 											  this);
 			
 			setTouchDelegate (touchDelegade);
+			
+			new Handler().postDelayed (new VerifyLongPress(),
+	   				   				   StateMachine.getLongPressTimeMs());
+
 			break;
 			
 			
@@ -252,9 +264,12 @@ public class TransparentFrame extends RelativeLayout implements View.OnTouchList
 			
 			int tapRadius = lesserDisplay * StateMachine.getTapRadiusPercent() / 100;
 			
-			motionHappen = Math.abs(X - downPoint.x) > tapRadius  
-						   ||
-						   Math.abs(Y - downPoint.y) > tapRadius;
+			if (Math.abs(X - downPoint.x) > tapRadius  
+				||
+				Math.abs(Y - downPoint.y) > tapRadius)
+			{
+				motionHappen = true;
+			}
 		    
 						   
 			layoutParams = (WindowManager.LayoutParams)getLayoutParams();
@@ -283,16 +298,17 @@ public class TransparentFrame extends RelativeLayout implements View.OnTouchList
 			if (!StateMachine.isActivityRun())
 			{
 				long timeNow = System.currentTimeMillis();
-				if (timeNow - downTime < StateMachine.getClickTimeMs())
+				if (-1 < downTime
+					&&
+					timeNow - downTime < StateMachine.getClickTimeMs())
 				{
 					if (timeNow - lastClickTime < StateMachine.getClickTimeMs())
 					{
 						Log.d(TAG, "onTouch. Double click encountered. Do whatever... Here: open activity.");
 
 						lastClickTime 	= 0;
-						motionHappen 	= false;
 						
-						new Handler().post (new InitiateActivity());
+						new Handler().post (new InitiateClick());
 					}
 					else
 					{
@@ -304,7 +320,10 @@ public class TransparentFrame extends RelativeLayout implements View.OnTouchList
 												   StateMachine.getClickTimeMs());
 					}
 				}
+				
 			}
+
+			downTime = -1;
 
 			
 			setTouchDelegate (null);
@@ -341,6 +360,21 @@ public class TransparentFrame extends RelativeLayout implements View.OnTouchList
 	}
 	
 	
+	private void verifyLongPress()
+	{
+		if (0 < downTime
+			&&
+			!motionHappen)
+		{
+			lastClickTime = 0;
+			
+			Log.d(TAG, "verifyLongPress. Long press encountered. Do whatever... Here: do nothing.");			
+
+			simulateHomePress();
+		}
+	}
+
+	
 	private void initiateActivity()
 	{
 		Intent intent = new Intent(context,
@@ -348,6 +382,16 @@ public class TransparentFrame extends RelativeLayout implements View.OnTouchList
 		
 		intent.addFlags (Intent.FLAG_ACTIVITY_NEW_TASK);
 		context.startActivity (intent);	
+	}
+
+	
+	private void simulateHomePress() 
+	{
+		Intent startMain = new Intent(Intent.ACTION_MAIN);
+		
+		startMain.addCategory (Intent.CATEGORY_HOME);
+		startMain.setFlags    (Intent.FLAG_ACTIVITY_NEW_TASK);
+		context.startActivity (startMain);
 	}
 
 

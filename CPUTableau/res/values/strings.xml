@@ -2,7 +2,7 @@
 <resources>
     <string name="app_name">CPUTableau</string>
     <string name="options">Options</string>
-    <string name="dialog.headline">CPU temperature overlay preferences</string> 
+    <string name="dialog.headline">CPU temperature overlay preferences. http://github.com/sms2000/CPUTableau</string> 
     <string name="dialog.enableoverlay">Enable overlay</string> 
     <string name="dialog.enablenotify">Enable the label in the Notification panel</string> 
     <string name="dialog.enabledebug">Extensive debug</string> 
@@ -13,8 +13,10 @@
     <string name="dialog.tvTransparency">"Background transparency [0-255]"</string>
     <string name="dialog.tvFontSize">"Font size [5-50]"</string>
     <string name="dialog.btFaherenheit">"Use Faherenheit"</string>
+    <string name="dialog.btShowCurrent">"Attempt to show charging current"</string>
     <string name="dialog.tvrefreshMs">"Refresh period (100-5000 ms)"</string>
     <string name="dialog.tvclickTimeMs">"Tap timeout (50-300 ms)"</string>
+    <string name="dialog.tvlongPressMs">"Long press timeout (600-2000 ms)"</string>
     <string name="dialog.tvtapRadiusPercent">"Tap radius sensitivity [1 - 10 %]"</string>
     <string name="notify">CPUTableau active...</string> 
     <string name="notify.active">Active...</string> 

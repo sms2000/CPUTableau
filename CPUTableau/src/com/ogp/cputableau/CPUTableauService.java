@@ -224,7 +224,6 @@ public class CPUTableauService extends Service implements ServiceInterface
 	}
 
 
-	@SuppressWarnings("deprecation")
 	private void setItForeground()
 	{
 		if (!isForeground

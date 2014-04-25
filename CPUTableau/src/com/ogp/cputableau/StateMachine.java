@@ -4,8 +4,32 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 
+
 public class StateMachine
 {
+	public static final int			 		MIN_FONT_SIZE 			= 5;
+	public static final int			 		DEF_FONT_SIZE 			= 24;
+	public static final int 				MAX_FONT_SIZE 			= 50;
+	
+	public static final int 				MIN_REFRESH_MS 			= 100;
+	public static final int 				DEF_REFRESH_MS 			= 250;
+	public static final int 				MAX_REFRESH_MS 			= 5000;
+	
+	public static final int 				MIN_CLICK_TIME_MS 		= 50;
+	public static final int 				DEF_CLICK_TIME_MS 		= 250;
+	public static final int 				MAX_CLICK_TIME_MS 		= 300;
+	
+	public static final int 				MIN_LONG_PRESS_MS 		= 500;
+	public static final int 				DEF_LONG_PRESS_MS 		= 1000;
+	public static final int 				MAX_LONG_PRESS_MS 		= 1500;
+	
+	public static final int 				MIN_TAP_RADIUS_PC 		= 1;
+	public static final int 				DEF_TAP_RADIUS_PC 		= 5;
+	public static final int 				MAX_TAP_RADIUS_PC 		= 10;
+	
+	public static final int 				DEF_TRANSPARENCY		= 200;
+
+	
 	private static final String 			PERSISTANT_STORAGE 		= "T2TB";
 	private static final String 			USE_OVERLAY 			= "UseOverlay";
 	private static final String 			EXTENSIVE_DEBUG			= "ExtensiveDebug";
@@ -17,8 +41,10 @@ public class StateMachine
 	private static final String 			TEMP_SCALE				= "TempScale";
 	private static final String 			REFRESH_MS				= "RefreshMs";
 	private static final String 			CLICK_TIME_MS			= "ClickTimeMs";
+	private static final String 			LONG_PRESS_MS			= "LongPressMs";
 	private static final String 			TAP_RADIUS_PERCENT		= "TapRadiusPercent";
-	
+	private static final String 			SHOW_CURRENT			= "ShowCurrent";
+		
 	private static Context					appContext;
 	
 	private static boolean 					extensiveDebug;
@@ -33,11 +59,14 @@ public class StateMachine
 	private static boolean 					useFaherenheit;
 	private static int 						refreshMs;
 	private static int 						clickTimeMs;
+	private static int 						longPressMs;
 	private static int 						tapRadiusPercent;
 
 	
 	private static boolean 					screenOn;
 	private static float 					batteryTemp;
+	
+	private static boolean					showChargeCurrent;
 	
 	
 	private StateMachine()
@@ -61,14 +90,16 @@ public class StateMachine
 		usePWL						= false;
 		useBTSL						= false;
 		useFaherenheit				= false;
-		refreshMs					= 250;
-		clickTimeMs					= 250;
-		tapRadiusPercent			= 5;
 		
-		transparency				= 200;
-		fontSize					= 24;
+		refreshMs					= DEF_REFRESH_MS;
+		clickTimeMs					= DEF_CLICK_TIME_MS;
+		longPressMs					= DEF_LONG_PRESS_MS;
+		tapRadiusPercent			= DEF_TAP_RADIUS_PC;
 		
-		readFromPersistantStorage();
+		transparency				= DEF_TRANSPARENCY;
+		fontSize					= DEF_FONT_SIZE;
+		
+		showChargeCurrent			= false;
 	}
 	
 	
@@ -87,7 +118,9 @@ public class StateMachine
 		useFaherenheit		= pref.getBoolean 	(TEMP_SCALE,			useFaherenheit);
 		refreshMs			= pref.getInt		(REFRESH_MS, 			refreshMs);
 		clickTimeMs			= pref.getInt		(CLICK_TIME_MS, 		clickTimeMs);
+		longPressMs			= pref.getInt		(LONG_PRESS_MS, 		longPressMs);
 		tapRadiusPercent	= pref.getInt		(TAP_RADIUS_PERCENT,	tapRadiusPercent);
+		showChargeCurrent	= pref.getBoolean 	(SHOW_CURRENT,			showChargeCurrent);
 	}
 
 	
@@ -108,7 +141,9 @@ public class StateMachine
 		editor.putBoolean	(TEMP_SCALE, 			useFaherenheit);
 		editor.putInt		(REFRESH_MS, 			refreshMs);
 		editor.putInt		(CLICK_TIME_MS, 		clickTimeMs);
+		editor.putInt		(LONG_PRESS_MS, 		longPressMs);
 		editor.putInt		(TAP_RADIUS_PERCENT, 	tapRadiusPercent);
+		editor.putBoolean	(SHOW_CURRENT, 			showChargeCurrent);
 			
 		editor.commit();
 	}
@@ -145,8 +180,15 @@ public class StateMachine
 	public static int	 	getClickTimeMs			() 				{return clickTimeMs;}
 	public static void		setClickTimeMs			(int	 value) {clickTimeMs = value;}
 
+	public static int 		getLongPressTimeMs		() 				{return longPressMs;}
+	public static void		setLongPressTimeMs		(int value) 	{longPressMs = value;}
+
 	public static int	 	getTapRadiusPercent		() 				{return tapRadiusPercent;}
 	public static void		setTapRadiusPercent		(int	 value) {tapRadiusPercent = value;}
+
+	public static boolean	getChargeCurrent		()				{return showChargeCurrent;} 
+	public static void		setChargeCurrent		(boolean value)	{showChargeCurrent = value;} 
+
 	
 // Not preserved (local state)	
 	public static void 		setActivityRun			(boolean value) {activityRun = value;}

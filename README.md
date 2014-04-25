@@ -3,6 +3,18 @@ CPUTableau
 
 Permanent overlay window presenting the CPU temperature, clock and active cores.
 
+2.0.229
+-------
+
+1. You can enable/disable Charge Current if not satisfied.
+
+2. Bug fixing.
+
+3. Behavior customizations.
+
+4. Little bug fixing...
+
+
 2.0.202
 -------
 

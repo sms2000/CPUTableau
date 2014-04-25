@@ -1,5 +1,7 @@
 package com.ogp.cputableau.providers;
 
+import com.ogp.cputableau.StateMachine;
+
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.util.Log;
@@ -37,6 +39,12 @@ public class ChargingProvider extends HWProvider
 	@Override
 	public String getData() 
 	{
+		if (!StateMachine.getChargeCurrent())
+		{
+			return null;
+		}
+
+		
 		try
 		{
 			int result = readFileData (chargeFiles);
