@@ -90,6 +90,7 @@ public class StateMachine
 		usePWL						= false;
 		useBTSL						= false;
 		useFaherenheit				= false;
+		showChargeCurrent			= false;
 		
 		refreshMs					= DEF_REFRESH_MS;
 		clickTimeMs					= DEF_CLICK_TIME_MS;
@@ -99,7 +100,7 @@ public class StateMachine
 		transparency				= DEF_TRANSPARENCY;
 		fontSize					= DEF_FONT_SIZE;
 		
-		showChargeCurrent			= false;
+		readFromPersistantStorage();
 	}
 	
 	

@@ -3,6 +3,12 @@ CPUTableau
 
 Permanent overlay window presenting the CPU temperature, clock and active cores.
 
+2.0.230
+-------
+
+1. A small bug (code regression) fixed.
+
+
 2.0.229
 -------
 
