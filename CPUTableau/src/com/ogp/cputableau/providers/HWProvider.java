@@ -9,7 +9,7 @@ import com.ogp.cputableau.StateMachine;
 
 public abstract class HWProvider 
 {
-	protected static int readFileData (String 	path)
+	protected static int readFileInt (String 	path)
 	{
 		File file = new File(path);
 
@@ -33,6 +33,30 @@ public abstract class HWProvider
 	}
 
 
+	protected static String readFileString (String 	path)
+	{
+		File file = new File(path);
+
+		try 
+		{
+			BufferedReader br = new BufferedReader(new FileReader(file));
+		    String str = br.readLine();
+		    br.close();
+		    
+		    return str;
+		} 
+		catch (Exception e) 
+		{
+			if (StateMachine.getExtensiveDebug())
+			{
+				e.printStackTrace();
+			}
+		}
+	    
+		return null;
+	}
+
+	
 	@SuppressLint("DefaultLocale")
 	protected static String temperatureDouble2StringString (double dres) 
 	{

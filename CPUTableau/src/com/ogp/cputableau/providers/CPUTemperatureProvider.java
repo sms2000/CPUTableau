@@ -32,7 +32,7 @@ public class CPUTemperatureProvider extends HWProvider
 				if (-1 == tempIndex)
 				{
 	 				for (tempIndex = 0; 
-	 					 0 >= readFileData (tempFiles[tempIndex]) 
+	 					 0 >= readFileInt (tempFiles[tempIndex]) 
 	 					 && 
 	 					 tempIndex < tempFiles.length; 
 	 					 tempIndex++);
@@ -64,7 +64,7 @@ public class CPUTemperatureProvider extends HWProvider
 		
 		try
 		{
-			int result = readFileData (tempFiles[tempIndex]);
+			int result = readFileInt (tempFiles[tempIndex]);
 				
 			if (result <= 0)
 			{

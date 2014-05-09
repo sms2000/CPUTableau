@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?> 
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
       package="com.ogp.cputableau"
-      android:versionCode="230"
-      android:versionName="2.0.230">
+      android:versionCode="236"
+      android:versionName="2.0.236">
       
     <uses-sdk android:minSdkVersion="9"  android:targetSdkVersion="19" />
     
@@ -37,5 +37,14 @@
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </receiver>
-	</application>
+        
+        <receiver android:name="UserPresentLoader" 
+            	  android:process="com.ogp.cputableau.CPUTableauService" >
+            
+            <intent-filter>
+                <action android:name="android.intent.action.USER_PRESENT" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </receiver>
+        	</application>
 </manifest> 

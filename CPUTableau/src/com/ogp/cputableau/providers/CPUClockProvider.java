@@ -18,14 +18,14 @@ public class CPUClockProvider extends HWProvider
 	{
 		try
 		{
-			if (0 > readFileData (freqFiles))
+			if (0 > readFileInt (freqFiles))
 			{
 				new ShellInterface();
 				ShellInterface.isSuAvailable();			
  				ShellInterface.runCommand ("chmod 404 " + freqFiles);
 			}
 
-			if (0 < readFileData (freqFiles))
+			if (0 < readFileInt (freqFiles))
 			{
 				Log.w(TAG, "CPUClockProvider. CPU clock file found.");
 			}
@@ -47,7 +47,7 @@ public class CPUClockProvider extends HWProvider
 	{
 		try
 		{
-			int result = readFileData (freqFiles) / KHZ2MHZ;
+			int result = readFileInt (freqFiles) / KHZ2MHZ;
 				
 			if (result <= 0)
  			{

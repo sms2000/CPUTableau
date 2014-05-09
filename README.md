@@ -3,6 +3,16 @@ CPUTableau
 
 Permanent overlay window presenting the CPU temperature, clock and active cores.
 
+2.0.236
+-------
+
+1. Charge current processing improved.
+
+2. The "User Presense Action" reloads the service if killed.
+
+3. Routine code cleaning.
+ 
+
 2.0.230
 -------
 
