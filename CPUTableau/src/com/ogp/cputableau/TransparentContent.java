@@ -16,6 +16,7 @@ import android.graphics.Rect;
 import android.graphics.PorterDuff;
 import android.os.Handler;
 import android.util.Log;
+import android.view.KeyEvent;
 
 
 @SuppressLint("DefaultLocale")
@@ -153,7 +154,6 @@ public class TransparentContent extends TransparentBase
 		Log.v(TAG, "finalize. ... Exit.");
 	}
 
-	
 	
 	public boolean drawOverlay (Canvas 		canvas, 
 							    boolean 	unconditional)
@@ -309,17 +309,12 @@ public class TransparentContent extends TransparentBase
 		String answer = providers[PRV_CPU_TEMPERATURE].getData();
 		if (null == answer)
 		{
-			if (setError())
-			{
-				return EUpdated.UPDATED;
-			}
-			else
-			{
-				return EUpdated.SAME;
-			}
+			newDataStrings[DATA_TEMPERATURE] = "??";
 		}
-		
-		newDataStrings[DATA_TEMPERATURE] = answer;
+		else
+		{
+			newDataStrings[DATA_TEMPERATURE] = answer;
+		}
 		
 
 // Temperature of the battery		

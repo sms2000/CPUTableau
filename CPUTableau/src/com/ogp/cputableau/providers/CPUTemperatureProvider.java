@@ -13,7 +13,8 @@ public class CPUTemperatureProvider extends HWProvider
 		   														   "/sys/class/thermal/thermal_zone1/temp",							// HTC Evo 3D
 		   														   "/sys/class/i2c-adapter/i2c-4/4-004c/temperature",
 		   														   "/sys/devices/platform/omap/omap_temp_sensor.0/temperature",
-		   														   "/sys/devices/platform/tegra_tmon/temp1_input",					// Atrix 4G
+		   														   "/sys/devices/platform/tegra_tmon/temp1_input",					// Atrix 4G 
+		   														   "/sys/devices/platform/tegra-i2c.3/i2c-3/3-004c/temp2_input",	// Atrix 4G 4.4.4
 		   														   "/sys/kernel/debug/tegra_thermal/temp_tj",
 		   														   "/sys/devices/platform/s5p-tmu/temperature",       				// Galaxy S3, Note 2
 		   														   "/sys/class/thermal/thermal_zone0/temp",

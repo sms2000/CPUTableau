@@ -17,6 +17,7 @@ import android.os.PowerManager.WakeLock;
 import android.telephony.PhoneStateListener;
 import android.telephony.TelephonyManager;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.WindowManager;
 
 
@@ -178,7 +179,7 @@ public class CPUTableauService extends Service implements ServiceInterface
 		Log.e(TAG, "onLowMemory");
 	}
 
-	
+
 	private void wakeUp (boolean wakeUp)
 	{
 		if (!wakeUp)
@@ -449,7 +450,7 @@ public class CPUTableauService extends Service implements ServiceInterface
 	{
 		StateMachine.setBatteryTemp (temperature);
 
-		Log.w(TAG, String.format ("setBatteryTemperature. Succeeded. New battery temperature: %.1f degC.", 
+		Log.v(TAG, String.format ("setBatteryTemperature. Succeeded. New battery temperature: %.1f degC.", 
 								  temperature));		
 	}
 
