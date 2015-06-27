@@ -72,7 +72,7 @@ public class ChargingProvider extends HWProvider
 					
 				if (0 < result)
 	 			{
-					savedCurrent = result;
+					savedCurrent = deductLittleValues(result);
 				}
 				
 				if (0 < savedCurrent)
@@ -94,5 +94,16 @@ public class ChargingProvider extends HWProvider
 		}
 		
 		return null;
+	}
+	
+	
+	public int deductLittleValues(int value)
+	{
+		if (value > 15000)		// 15 Amperes???? Maybe it's uA???
+		{
+			value /= 1000;
+		}
+		
+		return value;
 	}
 }

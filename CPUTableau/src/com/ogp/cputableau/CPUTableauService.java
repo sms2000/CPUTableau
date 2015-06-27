@@ -17,7 +17,6 @@ import android.os.PowerManager.WakeLock;
 import android.telephony.PhoneStateListener;
 import android.telephony.TelephonyManager;
 import android.util.Log;
-import android.view.KeyEvent;
 import android.view.WindowManager;
 
 

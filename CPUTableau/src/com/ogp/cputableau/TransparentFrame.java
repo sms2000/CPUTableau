@@ -24,6 +24,7 @@ public class TransparentFrame extends RelativeLayout implements View.OnTouchList
 	private TransparentContent			transparentClient;
 	private	Point						coords				= new Point();
 	private	boolean						motionHappen		= false;
+	private	boolean						viewAttached 		= false;
 
 	private Object						lock				= new Object();
 	private ServiceInterface			service;
@@ -41,7 +42,7 @@ public class TransparentFrame extends RelativeLayout implements View.OnTouchList
 	private long 						lastClickTime		= 0;
 	private Handler						handler				= new Handler();
 	private TouchDelegate 				touchDelegade		= null;
-
+	
 
 	private class VerifySingleClick implements Runnable
 	{
@@ -85,10 +86,16 @@ public class TransparentFrame extends RelativeLayout implements View.OnTouchList
 						0,
 						0);
 			
-			windowManager.updateViewLayout (TransparentFrame.this, 
-		   									params);
+			synchronized(lock)
+			{
+				if (viewAttached)
+				{
+					windowManager.updateViewLayout (TransparentFrame.this, 
+				   									params);
+				}
 
-			refresh();
+				refresh();
+			}	
 		}
 	}
 	
@@ -101,6 +108,7 @@ public class TransparentFrame extends RelativeLayout implements View.OnTouchList
 	}
 	
 
+	@SuppressLint("ClickableViewAccessibility")
 	public TransparentFrame(Context						context,
 							ServiceInterface 		 	service)
 	{
@@ -135,6 +143,11 @@ public class TransparentFrame extends RelativeLayout implements View.OnTouchList
 		
 		try
 		{
+			synchronized(lock)
+			{
+				viewAttached = false;
+			}
+			
 			windowManager.removeView (this);
 		}
 		catch(Exception e)
@@ -163,6 +176,10 @@ public class TransparentFrame extends RelativeLayout implements View.OnTouchList
 
 		windowManager.addView (this,
 							   layoutParams);
+		synchronized(lock)
+		{
+			viewAttached = true;
+		}
 		
 		frameParams = new RelativeLayout.LayoutParams (RelativeLayout.LayoutParams.MATCH_PARENT,
 													   RelativeLayout.LayoutParams.MATCH_PARENT);
@@ -204,6 +221,7 @@ public class TransparentFrame extends RelativeLayout implements View.OnTouchList
 	}
 	
 	
+	@SuppressLint("ClickableViewAccessibility")
 	public boolean onTouch (View 		v, 
 							MotionEvent event) 
 	{
@@ -453,14 +471,26 @@ public class TransparentFrame extends RelativeLayout implements View.OnTouchList
 	
 	public void refresh()
 	{
-		transparentClient.refresh();
+		try
+		{
+			transparentClient.refresh();
+		}
+		catch(Exception e)
+		{
+		}
 	}
 
 	
 	public void updateFontSize() 
 	{
-		transparentClient.updateFontSize();
-		
-		contentSizeChanged();
+		try
+		{
+			transparentClient.updateFontSize();
+			
+			contentSizeChanged();
+		}
+		catch(Exception e)
+		{
+		}
 	}
 }

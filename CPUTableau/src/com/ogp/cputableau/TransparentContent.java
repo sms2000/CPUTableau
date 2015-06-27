@@ -16,7 +16,6 @@ import android.graphics.Rect;
 import android.graphics.PorterDuff;
 import android.os.Handler;
 import android.util.Log;
-import android.view.KeyEvent;
 
 
 @SuppressLint("DefaultLocale")
