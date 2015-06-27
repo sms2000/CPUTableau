@@ -3,6 +3,19 @@ CPUTableau
 
 Permanent overlay window presenting the CPU temperature, clock and active cores.
 
+
+2.4.277
+-------
+
+1. Fixed small problems in layouts.
+
+2. Fixed crashes of interface when screen orientation change meets screen off/on. 
+   The fix is temporal, more research required.
+
+3. Charging current suits mA and uA now (Nexus 6 with Android M supported).
+
+
+
 2.0.236
 -------
 
