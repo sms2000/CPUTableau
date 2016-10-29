@@ -3,6 +3,11 @@ CPUTableau
 
 Permanent overlay window presenting the CPU temperature, clock and active cores.
 
+3.0.301
+-------
+1. (WIP) Nougat compatibility. Due to further hardened kernel obtaining som eof params (CPU temp) requires 'root'. Period.
+
+
 
 2.4.277
 -------

@@ -99,7 +99,7 @@ public class ChargingProvider extends HWProvider
 	
 	public int deductLittleValues(int value)
 	{
-		if (value > 15000)		// 15 Amperes???? Maybe it's uA???
+		if (value > 3000)		// 3 Amperes???? Maybe it's uA???
 		{
 			value /= 1000;
 		}

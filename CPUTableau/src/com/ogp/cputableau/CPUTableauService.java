@@ -232,29 +232,20 @@ public class CPUTableauService extends Service implements ServiceInterface
 		{
 			isForeground = true;
 			
-			Notification note = new Notification(R.drawable.icon,
-											     getResources().getString (R.string.notify),
-											     System.currentTimeMillis());
-
-			Intent intent = new Intent(this, 
-				 					   CPUTableauService.class);
-
+			Intent intent = new Intent(this, CPUTableauService.class);
 			intent.setFlags (Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
 
-			PendingIntent pi = PendingIntent.getActivity (this, 
-				 									   	  0,
-				 									   	  intent, 
-				 									   	  0);
+			PendingIntent pi = PendingIntent.getActivity (this, 0, intent, 0);
 
-			note.setLatestEventInfo (this, 
-								     getResources().getString (R.string.app_name),
-				 				  	 getResources().getString (R.string.notify_active),
-				 				  	 pi);
-		 
-			note.flags |= Notification.FLAG_NO_CLEAR;
+			Notification.Builder noteBuilder = new Notification.Builder(this)
+												 .setSmallIcon(R.drawable.icon)
+											     .setContentTitle(getString (R.string.notify))
+											     .setContentText(getString (R.string.notify))
+											     .setContentIntent(pi);
 
-			startForeground (1, 
-				 		  	 note);
+
+			startForeground (R.string.app_name, 
+				 		  	 noteBuilder.build());
 			
 			Log.d(TAG, "setItForeground. Bringing the service foreground...");
 		}
